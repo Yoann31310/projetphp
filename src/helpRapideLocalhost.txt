@@ -1,5 +1,0 @@
-Projet : http://localhost/ProjetPHP/src/.....
-
-
-PHPMyAdmin en localhost : http://localhost/phpmyadmin
-Requiert que Apache et MySQL de xampp soit lancés
