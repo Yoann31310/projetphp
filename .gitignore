@@ -1,0 +1,4 @@
+# Ignorer les fichiers de tests rapide
+./src/test_BD.php
+"./src/help rapide localhost.txt"
+
