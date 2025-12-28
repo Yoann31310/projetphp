@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['prenom_entraineur'] = $donneesEntraineur['prenom'];
 
         // Redirection vers la page d'accueil
-        header('Location: ../src/Vues/PageAccueil.php');
+        header('Location: ../Vues/PageAccueil.php');
         exit(); 
         
     } else {
