@@ -13,7 +13,7 @@ class Database {
             $utilisateur = 'projetphp';
             $mdp = 'Azertyuiop.0';
 
-            $this->connexion = new PDO("mysql:host=$host;dbname=$$bd;charset=utf8", $utilisateur, $mdp);
+            $this->connexion = new PDO("mysql:host=$host;dbname=$bd;charset=utf8", $utilisateur, $mdp);
             
             // On force PDO à afficher les erreurs SQL (très important pour les tests)
             $this->connexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
