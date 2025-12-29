@@ -8,8 +8,7 @@
         <ul class="menu-navigation">
             <li><a href="../Vues/PageAccueil.php" class="actif"     >Tableau de bord</a></li>
             <li><a href="../Controleurs/ControleurJoueur.php"       >Gestion des Joueurs</a></li>
-            <li><a href="PageListeMatchs.php"                       >Calendrier des Matchs</a></li>
-            <li><a href="PageFeuilleMatch.php"                      >Feuilles de Match</a></li>
+            <li><a href="../Controleurs/ControleurMatch.php"        >Gérer mes matchs</a></li>
             <li><a href="PageStatistiques.php"                      >Statistiques de l'équipe</a></li>
         </ul>
         
