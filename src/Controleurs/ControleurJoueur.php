@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Sécurité : Si pas de session, on envoit sur page de Connexion
+// Vérification de l'authentification
 if (!isset($_SESSION['id_entraineur'])) {
     header('Location: ../Vues/PageConnexion.php');
     exit();
@@ -11,83 +11,109 @@ require_once '../Modeles/ModeleJoueur.php';
 
 class ControleurJoueur {
 
-    // Méthode pour afficher la liste (Récupère les données et appelle la Vue)
+    // Affiche la liste et gère le mode édition
     public function lister() {
-        $listeJoueurs = ModeleJoueur::recupererTout(); //
+        // Remplacement du ternaire par un if/else
+        if (isset($_GET['id_edition'])) {
+            $idEdition = (int)$_GET['id_edition'];
+        } else {
+            $idEdition = 0;
+        }
+
+        $listeJoueurs = ModeleJoueur::recupererTout();
         require_once '../Vues/PageListeJoueurs.php';
     }
 
-
-    // Méthode pour traiter l'ajout
+    // Gère l'ajout ou la restauration
     public function ajouter() {
-        echo "Ajout en cours de traitement...";
+        $nom = $_POST['nom'];
+        $prenom = $_POST['prenom'];
+        $licence = $_POST['licence'];
+        $statut = $_POST['statut'];
+
+        // Types et champs vides
+        if (empty($nom) || empty($prenom) || !is_numeric($licence) || $licence <= 0) {              // Pour vérifier les chiffres
+            $_SESSION['erreur'] = "Données invalides. La licence doit être un nombre.";
+            header('Location: ControleurJoueur.php');
+            exit();
+        } 
+        if (!(ctype_alpha($nom)) || strlen($nom) < 3 || !(ctype_alpha($prenom)) || strlen($prenom) < 3) {       // Pour vérifier que c'est des lettres
+            $_SESSION['erreur'] = "Données invalides. Le nom et prénom doivent avoir au moins 3 lettres et aucun chiffre.";
+            header('Location: ControleurJoueur.php');
+            exit();
+        }
+
+        // Vérif si le joueur existe déjà (même supprimé)
+        $joueurExistant = ModeleJoueur::trouverParLicence($licence);
+
+        if ($joueurExistant) {
+            // Si joueur supprimé, on restaure avec le reste des infos
+            if ($joueurExistant['statut'] == 'Supprimé') {
+                $donnees = ['nom' => $nom, 'prenom' => $prenom, 'licence' => $licence, 'statut' => $statut];
+                ModeleJoueur::modifier($joueurExistant['Id_Joueurs'], $donnees);
+            } else {
+                $_SESSION['erreur'] = "Cette licence est déjà active.";
+            }
+        } else {
+            // Nouveau joueur
+            $donnees = ['nom' => $nom, 'prenom' => $prenom, 'licence' => $licence, 'statut' => $statut];
+            ModeleJoueur::ajouter($donnees);
+        }
+
+        header('Location: ControleurJoueur.php');
+        exit();
     }
 
     public function supprimer() {
-        // On vérifie qu'on a bien reçu l'ID en POST
         if (isset($_POST['id'])) {
-            $id = (int)$_POST['id']; // On force le type entier pour la sécurité
-            
-            // On appelle le modèle pour faire le travail en base de données
-            ModeleJoueur::supprimer($id);
-            
-            // Une fois fini, on recharge la liste des joueurs
-            header('Location: ControleurJoueur.php?action=lister');
-            exit();
+            ModeleJoueur::supprimer((int)$_POST['id']);
         }
+        header('Location: ControleurJoueur.php?action=lister');
+        exit();
     }
 }
 
+
 $gestionnaire = new ControleurJoueur();
-$action = "lister"; // Action par défaut
+$action = "lister";
 
-if (isset($_POST['action'])) $action = $_POST['action'];
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
+} elseif (isset($_GET['action'])) {
+    $action = $_GET['action'];
+}
 
-
-// Le switch appelle la bonne méthode de la classe
 switch ($action) {
     case "lister":
-        // On récupère l'éventuel ID en cours d'édition (GET pour l'affichage)
-        $idEdition = isset($_GET['id_edition']) ? (int)$_GET['id_edition'] : 0;
-        $listeJoueurs = ModeleJoueur::recupererTout();
-        require_once '../Vues/PageListeJoueurs.php';
+        $gestionnaire->lister();
+        break;
+
+    case "valider_ajout":
+        $gestionnaire->ajouter();
         break;
 
     case "enregistrer_modif":
         if (isset($_POST['id'])) {
             $id = (int)$_POST['id'];
-            $nom = $_POST['nom'];
-            $prenom = $_POST['prenom'];
-            $licence = (int) $_POST['licence'];
-            $statut = $_POST['statut'];
-
-            // Si champs vides
-            if (empty($nom) || empty($prenom) || $licence <= 0) {
-                $_SESSION['erreur'] = "Tous les champs sont obligatoires et la licence doit être valide.";
-                header("Location: ControleurJoueur.php?action=lister&id_edition=$id");
-                exit();
-            }
-
-            // Si licence existe déjà
+            $licence = $_POST['licence'];
+            
+            // Vérification si la licence est prise par qqun d'autre
             if (ModeleJoueur::licenceExisteDeja($licence, $id)) {
-                $_SESSION['erreur'] = "Erreur : Le numéro de licence $licence est déjà attribué à un autre joueur.";
+                $_SESSION['erreur'] = "Licence déjà utilisée.";
                 header("Location: ControleurJoueur.php?action=lister&id_edition=$id");
-                exit();
+            } else {
+                $donnees = ['nom' => $_POST['nom'], 'prenom' => $_POST['prenom'], 'licence' => $licence, 'statut' => $_POST['statut']];
+                ModeleJoueur::modifier($id, $donnees);
+                header('Location: ControleurJoueur.php?action=lister');
             }
-
-            // Si OK, on modifie
-            $donnees = ['nom' => $nom, 'prenom' => $prenom, 'licence' => $licence, 'statut' => $statut];
-            ModeleJoueur::modifier($id, $donnees);
-            header('Location: ControleurJoueur.php?action=lister');
             exit();
         }
         break;
+
     case "supprimer":
         $gestionnaire->supprimer();
         break;
-    case "ajouter":
-        $gestionnaire->ajouter();
-        break;
+
     default:
         $gestionnaire->lister();
         break;

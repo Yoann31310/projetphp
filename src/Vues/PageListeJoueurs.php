@@ -26,14 +26,10 @@
             <div class="message-erreur" style="color: red; background: #fee; padding: 10px; border: 1px solid red; margin-bottom: 20px;">
                 <?php 
                     echo $_SESSION['erreur']; 
-                    unset($_SESSION['erreur']); // On supprime l'erreur après affichage (Nettoyage)
+                    unset($_SESSION['erreur']); 
                 ?>
             </div>
         <?php endif; ?>
-
-        <div class="actions-haut">
-            <a href="PageAjouterJoueur.php" class="bouton-ajouter">+ Ajouter un joueur</a>
-        </div>
 
         <table class="tableau-donnees">
             <thead>
@@ -46,31 +42,59 @@
                 </tr>
             </thead>
             <tbody>
+                
+                <tr style="background-color: #e8f8f5; border-bottom: 2px solid #27ae60;">
+                    <form action="../Controleurs/ControleurJoueur.php" method="POST">
+                        <input type="hidden" name="action" value="valider_ajout">
+                        
+                        <td><input type="text" name="licence" placeholder="N° Licence" required style="width: 100px;"></td>
+                        <td><input type="text" name="nom" placeholder="NOM" required></td>
+                        <td><input type="text" name="prenom" placeholder="Prénom" required></td>
+                        <td>
+                            <select name="statut">
+                                <option value="Actif">Actif</option>
+                                <option value="Blessé">Blessé</option>
+                                <option value="Suspendu">Suspendu</option>
+                                <option value="Absent">Absent</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="submit" style="background: #27ae60; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer; font-weight: bold;">
+                                ✚ AJOUTER
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+
                 <?php if (isset($listeJoueurs) && !empty($listeJoueurs)): ?>
-                    
                     <?php foreach ($listeJoueurs as $joueur): ?>
                         <tr>
                             <form action="../Controleurs/ControleurJoueur.php" method="POST">
-                                
                                 <input type="hidden" name="action" value="enregistrer_modif">
                                 <input type="hidden" name="id" value="<?php echo $joueur['Id_Joueurs']; ?>">
 
                                 <td>
                                     <?php if ($idEdition == $joueur['Id_Joueurs']): ?>
                                         <input type="text" name="licence" value="<?php echo $joueur['Numero_licence']; ?>" required>
-                                    <?php else: echo $joueur['Numero_licence']; endif; ?>
+                                    <?php else: ?>
+                                        <?php echo $joueur['Numero_licence']; ?>
+                                    <?php endif; ?>
                                 </td>
                                 
                                 <td>
                                     <?php if ($idEdition == $joueur['Id_Joueurs']): ?>
                                         <input type="text" name="nom" value="<?php echo $joueur['nom']; ?>" required>
-                                    <?php else: echo strtoupper($joueur['nom']); endif; ?>
+                                    <?php else: ?>
+                                        <?php echo strtoupper($joueur['nom']); ?>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
                                     <?php if ($idEdition == $joueur['Id_Joueurs']): ?>
                                         <input type="text" name="prenom" value="<?php echo $joueur['prenom']; ?>" required>
-                                    <?php else: echo $joueur['prenom']; endif; ?>
+                                    <?php else: ?>
+                                        <?php echo $joueur['prenom']; ?>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
@@ -81,7 +105,9 @@
                                             <option value="Suspendu" <?php if($joueur['statut'] == 'Suspendu') echo 'selected'; ?>>Suspendu</option>
                                             <option value="Absent" <?php if($joueur['statut'] == 'Absent') echo 'selected'; ?>>Absent</option>
                                         </select>
-                                    <?php else: echo $joueur['statut']; endif; ?>
+                                    <?php else: ?>
+                                        <?php echo $joueur['statut']; ?>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
@@ -94,7 +120,7 @@
                                         <form action="../Controleurs/ControleurJoueur.php" method="POST" style="display:inline;">
                                             <input type="hidden" name="action" value="supprimer">
                                             <input type="hidden" name="id" value="<?php echo $joueur['Id_Joueurs']; ?>">
-                                            <button type="submit" class="bouton-supprimer" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">
+                                            <button type="submit" class="bouton-supprimer" style="background:red; color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;">
                                                 Supprimer
                                             </button>
                                         </form>
@@ -103,7 +129,6 @@
                             </form>
                         </tr>
                     <?php endforeach; ?>
-
                 <?php endif; ?>
             </tbody>
         </table>
