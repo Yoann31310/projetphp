@@ -13,25 +13,10 @@
     if (!isset($listeJoueurs)) $listeJoueurs = [];
     ?>
 
-    <nav class="barre-laterale">
-        <div class="logo-section">
-            <img src="../Vues/css/imageCoach.png" alt="Logo" width="60">
-            <h3>Handball Coach</h3>
-        </div>
-        
-        <ul class="menu-navigation">
-            <li><a href="../Vues/PageAccueil.php">Tableau de bord</a></li>
-            <li><a href="../Controleurs/ControleurJoueur.php" class="actif">Gestion des Joueurs</a></li>
-            <li><a href="PageListeMatchs.php">Calendrier des Matchs</a></li>
-            <li><a href="PageFeuilleMatch.php">Feuilles de Match</a></li>
-            <li><a href="PageStatistiques.php">Statistiques de l'équipe</a></li>
-        </ul>
-        
-        <div class="zone-deconnexion">
-            <a href="../Controleurs/ControleurDeconnexion.php" class="bouton-deconnexion">Déconnexion</a>
-        </div>
-    </nav>
-
+    <?php 
+        $page_active = 'joueurs'; 
+        require_once 'menu.php'; 
+    ?>
 
     <main class="contenu-principal">
         <h1>Effectif de l'équipe</h1>
