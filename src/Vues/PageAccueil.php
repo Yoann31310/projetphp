@@ -26,11 +26,11 @@ if (!isset($_SESSION['id_entraineur'])) {
         </div>
         
         <ul class="menu-navigation">
-            <li><a href="PageAccueil.php" class="actif">Tableau de bord</a></li>
-            <li><a href="PageListeJoueurs.php">Gestion des Joueurs</a></li>
-            <li><a href="PageListeMatchs.php">Calendrier des Matchs</a></li>
-            <li><a href="PageFeuilleMatch.php">Feuilles de Match</a></li>
-            <li><a href="PageStatistiques.php">Statistiques de l'équipe</a></li>
+            <li><a href="PageAccueil.php" class="actif"             >Tableau de bord</a></li>
+            <li><a href="../Controleurs/ControleurJoueur.php"       >Gestion des Joueurs</a></li>
+            <li><a href="PageListeMatchs.php"                       >Calendrier des Matchs</a></li>
+            <li><a href="PageFeuilleMatch.php"                      >Feuilles de Match</a></li>
+            <li><a href="PageStatistiques.php"                      >Statistiques de l'équipe</a></li>
         </ul>
         
         <!-- Bouton déconnexion -->

@@ -1,28 +1,22 @@
 <?php
-// Inclusion de la classe Database pour la connexion
 require_once 'Database.php'; 
 
 class ModeleJoueur {
 
-    // Récupérer tous les joueurs qui ne sont pas marqués comme 'Supprimé'
+    // Récupérer les joueurs actifs
     public static function recupererTout() {
         $db = Database::getInstance();
         $sql = "SELECT * FROM Joueurs WHERE statut != 'Supprimé' ORDER BY nom ASC";
         return $db->query($sql)->fetchAll();
     }
 
-    // Vérifier si une licence existe déjà en base de données
-    // On ajoute un $idExclu pour ne pas se compter soi-même lors d'une modification
+    // Vérifier si la licence est déjà prise (en excluant l'ID actuel pour les modifs)
     public static function licenceExisteDeja($licence, $idExclu) {
         $db = Database::getInstance();
         $req = $db->prepare("SELECT COUNT(*) FROM Joueurs WHERE Numero_licence = :licence AND Id_Joueurs != :id");
-        $req->execute([
-            'licence' => $licence, 
-            'id' => $idExclu
-        ]);
+        $req->execute(['licence' => $licence, 'id' => $idExclu]);
         
         $resultat = $req->fetchColumn();
-        
         if ($resultat > 0) {
             return true;
         } else {
@@ -30,7 +24,15 @@ class ModeleJoueur {
         }
     }
 
-    // Chercher un joueur par sa licence (même s'il est supprimé)
+    // Vérifier si une licence existe déjà
+    public static function trouverParNomPrenom($nom, $prenom, $idExclu) {
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM Joueurs WHERE nom = :nom AND prenom = :prenom AND Id_Joueurs != :id AND statut != 'Supprimé'";
+        $req = $db->prepare($sql);
+        $req->execute(['nom' => $nom, 'prenom' => $prenom, 'id' => $idExclu]);
+        return $req->fetch();
+    }
+
     public static function trouverParLicence($licence) {
         $db = Database::getInstance();
         $req = $db->prepare("SELECT * FROM Joueurs WHERE Numero_licence = :licence");
@@ -38,32 +40,42 @@ class ModeleJoueur {
         return $req->fetch(); 
     }
 
-    // Insérer un nouveau joueur
+    // Ajouter un joueur
     public static function ajouter($d) {
         $db = Database::getInstance();
-        $req = $db->prepare("INSERT INTO Joueurs (nom, prenom, Numero_licence, statut) VALUES (:nom, :prenom, :licence, :statut)");
+        $sql = "INSERT INTO Joueurs (nom, prenom, Numero_licence, date_naissance, taille, poids, statut) 
+                VALUES (:nom, :prenom, :licence, :date_n, :taille, :poids, :statut)";
+        $req = $db->prepare($sql);
         return $req->execute([
             'nom'     => $d['nom'],
             'prenom'  => $d['prenom'],
             'licence' => $d['licence'],
+            'date_n'  => $d['date_naissance'],
+            'taille'  => $d['taille'],
+            'poids'   => $d['poids'],
             'statut'  => $d['statut']
         ]);
     }
 
-    // Mettre à jour les données d'un joueur
+    // Modifie un joueur
     public static function modifier($id, $d) {
         $db = Database::getInstance();
-        $req = $db->prepare("UPDATE Joueurs SET nom = :nom, prenom = :prenom, Numero_licence = :licence, statut = :statut WHERE Id_Joueurs = :id");
+        $sql = "UPDATE Joueurs SET nom = :nom, prenom = :prenom, Numero_licence = :licence, 
+                date_naissance = :date_n, taille = :taille, poids = :poids, statut = :statut 
+                WHERE Id_Joueurs = :id";
+        $req = $db->prepare($sql);
         return $req->execute([
             'nom'     => $d['nom'],
             'prenom'  => $d['prenom'],
             'licence' => $d['licence'],
+            'date_n'  => $d['date_naissance'],
+            'taille'  => $d['taille'],
+            'poids'   => $d['poids'],
             'statut'  => $d['statut'],
             'id'      => $id
         ]);
     }
 
-    // Soft delete : on change juste le statut
     public static function supprimer($id) {
         $db = Database::getInstance();
         $req = $db->prepare("UPDATE Joueurs SET statut = 'Supprimé' WHERE Id_Joueurs = :id");

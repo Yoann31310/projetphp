@@ -34,6 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 } else {
     // Si on arrive sur ce fichier, on redirige vers la page de connexion
-    header('Location: ../Vues/connexion.php');
+    header('Location: ../Vues/PageConnexion.php');
     exit();
 }
