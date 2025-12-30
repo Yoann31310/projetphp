@@ -35,14 +35,22 @@
                         <td><button type="submit">✚ Programmer</button></td>
                     </form>
                 </tr>
-                <?php foreach ($listeMatchs as $m) { ?>
+                <?php foreach ($liste_matchs as $m) { ?>
                     <tr>
-                        <td><?php echo $m['Date_heure']; ?></td>
-                        <td><?php echo $m['nom_equipe_adverse']; ?></td>
-                        <td><?php echo $m['lieu']; ?></td>
-                        <td><?php echo $m['resultat'] ? $m['resultat'] : "<em>À venir</em>"; ?></td>
+                        <td><?php echo $m->get_date_heure(); ?></td>
+                        <td><?php echo $m->get_nom_equipe_adverse(); ?></td>
+                        <td><?php echo $m->get_lieu(); ?></td>
                         <td>
-                            <a href="ControleurMatch.php?action=details&id=<?php echo $m['Id_Matchs']; ?>" 
+                            <?php 
+                            if ($m->get_resultat()) {
+                                echo $m->get_resultat();
+                            } else {
+                                echo "<em>À venir</em>";
+                            }
+                            ?>
+                        </td>                        
+                        <td>
+                            <a href="ControleurMatch.php?action=details&id=<?php echo $m->get_id_matchs(); ?>" 
                                style="background:#3498db; color:white; padding:5px 10px; text-decoration:none;">Gérer</a>
                         </td>
                     </tr>

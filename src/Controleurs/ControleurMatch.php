@@ -1,136 +1,170 @@
 <?php
 session_start();
 
+// Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
 if (!isset($_SESSION['id_entraineur'])) {
-    header('Location: ../Vues/PageConnexion.php');
-    exit();
+	header('Location: ../Vues/PageConnexion.php');
+	exit();
 }
 
-require_once '../Modeles/ModeleMatch.php';
-require_once '../Modeles/ModeleJoueur.php';
-require_once '../Modeles/ModeleFeuilleMatch.php';
+require_once '../Modeles/Classes/Matchs.php';
+require_once '../Modeles/Classes/Joueur.php';
+require_once '../Modeles/Classes/Participation.php';
 
 class ControleurMatch {
+	// Vérifier que les quotas de la feuille de match sont respectés
+	private function valider_quotas_feuille($participants) {
+		$nb_titulaires = 0;
+		$nb_remplacants = 0;
 
-    // Validation des quotas (5-7 titulaires, 7 remplaçants max)
-    private function validerQuotasFeuille($participants) {
-        $nbTitulaires = 0;
-        $nbRemplacants = 0;
+		// Compter les titulaires et remplaçants
+		foreach ($participants as $p) {
+			if ($p['role'] == "titulaire") {
+				$nb_titulaires++;
+			} else if ($p['role'] == "remplaçant") {
+				$nb_remplacants++;
+			}
+		}
 
-        foreach ($participants as $p) {
-            if ($p['role'] == "titulaire") {
-                $nbTitulaires++;
-            } else if ($p['role'] == "remplaçant") {
-                $nbRemplacants++;
-            }
-        }
-
-        if ($nbTitulaires < 5) return "Nombre de titulaires insuffisant : 5 minimum (actuellement : $nbTitulaires).";
-        if ($nbTitulaires > 7) return "Trop de titulaires : 7 maximum (actuellement : $nbTitulaires).";
-        if ($nbRemplacants > 7) return "Trop de remplaçants : 7 maximum (actuellement : $nbRemplacants).";
+		// Vérifier les quotas réglementaires
+		if ($nb_titulaires < 5) {   return "Nombre de titulaires insuffisant : 5 minimum (actuellement : $nb_titulaires).";}
+		if ($nb_titulaires > 7) {   return "Trop de titulaires : 7 maximum (actuellement : $nb_titulaires).";}		
+		if ($nb_remplacants > 7) {  return "Trop de remplaçants : 7 maximum (actuellement : $nb_remplacants).";}
 
         return "OK";
-    }
+	}
 
-    public function lister() {
-        $listeMatchs = ModeleMatch::recupererTout();
-        require_once '../Vues/PageListeMatchs.php';
-    }
+	// Afficher la liste de tous les matchs
+	public function lister() {
+		$liste_matchs = Matchs::recuperer_tout();
+		require_once '../Vues/PageListeMatchs.php';
+	}
 
-    public function details() {
-        if (isset($_GET['id'])) {
-            $idMatch = (int)$_GET['id'];
-            $match = ModeleMatch::trouverParId($idMatch);
-            $joueursActifs = ModeleJoueur::recupererTout();
-            $participants = ModeleFeuilleMatch::recupererParticipants($idMatch);
+	// Afficher les détails d'un match
+	public function details() {
+		// Vérifier que l'ID du match est fourni
+		if (isset($_GET['id'])) {
+			$id_match = (int)$_GET['id'];
+			
+			// Récupérer le match et ses participants
+			$match = Matchs::trouver_par_id($id_match);
+			$joueurs_actifs = Joueur::recuperer_actifs();
+			$participants = Participation::recuperer_participants($id_match);
 
-            // Logique Pré/Post Match
-            $dateMatch = strtotime($match['Date_heure']);
-            if ($dateMatch < time()) {
-                $modeMatch = "POST_MATCH";
-            } else {
-                $modeMatch = "PRE_MATCH";
-            }
-            require_once '../Vues/PageDetailsMatch.php';
-        }
-    }
+			// Déterminer si le match est passé ou à venir
+			$date_match = strtotime($match->get_date_heure());
+			if ($date_match < time()) {				$mode_match = "POST_MATCH";
+			} else {                				$mode_match = "PRE_MATCH";
+			}
+			
+			require_once '../Vues/PageDetailsMatch.php';
+		}
+	}
 
-    public function ajouter() {
-        $date_heure = $_POST['date'] . " " . $_POST['heure'] . ":00";
-        $donnees = [
-            'date_heure' => $date_heure,
-            'adversaire' => $_POST['adversaire'],
-            'lieu' => $_POST['lieu'],
-            'adresse' => $_POST['adresse']
-        ];
-        ModeleMatch::ajouter($donnees);
-        header('Location: ControleurMatch.php');
-        exit();
-    }
+	// Ajouter un nouveau match
+	public function ajouter() {
+		// Combiner la date et l'heure pour créer le datetime
+		$date_heure = $_POST['date'] . " " . $_POST['heure'] . ":00";
+		
+		// Créer un objet Match avec les données du formulaire
+		$nouveau_match = new Matchs();
+		$nouveau_match->set_date_heure($date_heure);
+		$nouveau_match->set_nom_equipe_adverse($_POST['adversaire']);
+		$nouveau_match->set_lieu($_POST['lieu']);
+		$nouveau_match->set_adresse($_POST['adresse']);
+		
+		// Enregistrer le match
+		Matchs::ajouter($nouveau_match);
+		
+		header('Location: ControleurMatch.php');
+		exit();
+	}
 
-    public function modifier() {
-        $id = (int)$_POST['id'];
-        $date_heure = $_POST['date'] . " " . $_POST['heure'];
-        
-        $res = isset($_POST['resultat']) ? $_POST['resultat'] : NULL;
+	// Modifier un match existant
+	public function modifier() {
+		$id = (int)$_POST['id'];
+		$date_heure = $_POST['date'] . " " . $_POST['heure'];
+		
+		// Récupérer le résultat si disponible, sinon NULL
+		if (isset($_POST['resultat'])) { 	$res = $_POST['resultat'];
+		} else { 							$res = NULL;
+}
 
-        $donnees = [
-            'date_heure' => $date_heure,
-            'adversaire' => $_POST['adversaire'],
-            'lieu'       => $_POST['lieu'],
-            'adresse'    => $_POST['adresse'],
-            'resultat'   => $res
-        ];
-        ModeleMatch::modifier($id, $donnees);
-        header("Location: ControleurMatch.php?action=details&id=$id");
-        exit();
-    }
+		// Créer un objet Match avec les données modifiées
+		$match_modifie = new Matchs();
+		$match_modifie->set_date_heure($date_heure);
+		$match_modifie->set_nom_equipe_adverse($_POST['adversaire']);
+		$match_modifie->set_lieu($_POST['lieu']);
+		$match_modifie->set_adresse($_POST['adresse']);
+		$match_modifie->set_resultat($res);
+		
+		// Enregistrer les modifications
+		Matchs::modifier($id, $match_modifie);
+		
+		header("Location: ControleurMatch.php?action=details&id=$id");
+		exit();
+	}
 
-    public function valider_feuille() {
-        $idMatch = (int)$_POST['id_match'];
-        $tousLesIds = $_POST['tous_les_joueurs']; 
-        
-        $listeFinale = array();
+	// Enregistrer la feuille de match (sélection titulaires/remplaçants)
+	public function valider_feuille() {
+		$id_match = (int)$_POST['id_match'];
+		$tous_les_ids = $_POST['tous_les_joueurs'];
+		
+		$liste_finale = array();
 
-        // On filtre ceux qui ne sont pas "non_partant"
-        foreach ($tousLesIds as $idJ) {
-            $roleChoisi = $_POST['role_' . $idJ];
+		// Filtrer les joueurs qui participent (exclure les "non_partant")
+		foreach ($tous_les_ids as $id_j) {
+			$role_choisi = $_POST['role_' . $id_j];
 
-            if ($roleChoisi != "non_partant") {
-                $listeFinale[] = [
-                    'id_joueur' => $idJ,
-                    'role' => $roleChoisi,
-                    'poste' => $_POST['poste_' . $idJ]
-                ];
-            }
-        }
+			if ($role_choisi != "non_partant") {
+				$liste_finale[] = [
+					'id_joueur' => $id_j,
+					'role' => $role_choisi,
+					'poste' => $_POST['poste_' . $id_j]
+				];
+			}
+		}
 
-        $erreur = $this->validerQuotasFeuille($listeFinale);
-        if ($erreur != "OK") {
-            $_SESSION['erreur'] = $erreur;
-            header("Location: ControleurMatch.php?action=details&id=$idMatch");
-            exit();
-        }
+		// Valider les quotas réglementaires
+		$erreur = $this->valider_quotas_feuille($liste_finale);
+		if ($erreur != "OK") {
+			$_SESSION['erreur'] = $erreur;
+			header("Location: ControleurMatch.php?action=details&id=$id_match");
+			exit();
+		}
 
-        ModeleFeuilleMatch::viderFeuille($idMatch);
-        foreach ($listeFinale as $joueur) {
-            ModeleFeuilleMatch::ajouterParticipant($idMatch, $joueur['id_joueur'], $joueur['role'], $joueur['poste']);
-        }
-        
-        header("Location: ControleurMatch.php?action=details&id=$idMatch");
-        exit();
-    }
+		// Vider l'ancienne feuille et enregistrer la nouvelle
+		Participation::vider_feuille($id_match);
+		
+		foreach ($liste_finale as $joueur) {
+			Participation::ajouter_participant(
+				$id_match,
+				$joueur['id_joueur'],
+				$joueur['role'],
+				$joueur['poste']
+			);
+		}
+		
+		header("Location: ControleurMatch.php");
+		exit();
+	}
 }
 
 $gestionnaire = new ControleurMatch();
-$action = "lister";
-if (isset($_GET['action'])) $action = $_GET['action'];
-else if (isset($_POST['action'])) $action = $_POST['action'];
 
+// Déterminer l'action demandée (par défaut : lister)
+$action = "lister";
+if (isset($_GET['action'])) {
+	$action = $_GET['action'];
+} else if (isset($_POST['action'])) {
+	$action = $_POST['action'];
+}
+
+// Exécuter l'action correspondante
 switch ($action) {
-    case "details": $gestionnaire->details(); break;
-    case "valider_ajout": $gestionnaire->ajouter(); break;
-    case "enregistrer_modif": $gestionnaire->modifier(); break;
-    case "enregistrer_feuille": $gestionnaire->valider_feuille(); break;
-    default: $gestionnaire->lister(); break;
+	case "details":             		$gestionnaire->details();           break;
+	case "valider_ajout":   	    	$gestionnaire->ajouter();           break;
+	case "enregistrer_modif":   		$gestionnaire->modifier();  	    break;
+	case "enregistrer_feuille": 		$gestionnaire->valider_feuille();   break;
+	default:                    		$gestionnaire->lister();            break;
 }
