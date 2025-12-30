@@ -2,6 +2,8 @@
 // Initialisation de la session pour les messages d'erreur
 session_start(); 
 ?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,6 +12,7 @@ session_start();
     <title>Connexion - Gestion Handball</title>
     <link rel="stylesheet" href="css/styleConnexion.css">
 </head>
+
 <body>
     <div class="conteneur-connexion">
         <form action="../Controleurs/ControleurConnexion.php" method="POST" class="formulaire-connexion">
@@ -24,6 +27,7 @@ session_start();
                 <div class="message-erreur">
                     <?php 
                         echo $_SESSION['erreur']; 
+                        // Supprimer le message après affichage
                         unset($_SESSION['erreur']); 
                     ?>
                 </div>

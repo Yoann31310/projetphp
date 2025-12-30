@@ -1,145 +1,205 @@
 <?php
 session_start();
 
-// Vérification de l'authentification
+// Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
 if (!isset($_SESSION['id_entraineur'])) {
-    header('Location: ../Vues/PageConnexion.php');
-    exit();
+	header('Location: ../Vues/PageConnexion.php');
+	exit();
 }
 
-require_once '../Modeles/ModeleJoueur.php';
+require_once '../Modeles/Classes/Joueur.php';
 
 class ControleurJoueur {
+	// Vérifier le format du nom ou prénom (lettres avec accents, minimum 3 caractères)
+	private function verifier_format_texte($chaine) {
+		// Mesurer la longueur de la chaîne en UTF-8 pour gérer les accents
+		$longueur = mb_strlen($chaine, 'UTF-8');
+		
+		if ($longueur < 3) {
+			return "trop court (min 3 caractères)";
+		}
 
-    // Vérification du format texte (avec accent) + taille minimum = 3
-    private function verifierFormatTexte($chaine) {
-        $longueur = mb_strlen($chaine, 'UTF-8'); 
-        if ($longueur < 3) {
-            return "trop court (min 3 caractères)";
-        }
+		// Caractères autorisés (lettres avec accents et tiret)
+		$autorises = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ éèàçîïôûùêëÂÀÉÈÊËÎÏÔÛÙÇ-";
+		
+		for ($i = 0; $i < $longueur; $i++) {
+			// Extraire un caractère à la position i en UTF-8
+			$lettre = mb_substr($chaine, $i, 1, 'UTF-8');
+			// Vérifier si le caractère est dans la liste des autorisés
+			if (strpos($autorises, $lettre) === false) {
+				return "caractère interdit : [" . $lettre . "] à la position " . ($i + 1);
+			}
+		}
+		return "OK";
+	}
 
-        $autorises = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ éèàçîïôûùêëÂÀÉÈÊËÎÏÔÛÙÇ-";
-        for ($i = 0; $i < $longueur; $i++) {
-            $lettre = mb_substr($chaine, $i, 1, 'UTF-8');
-            if (strpos($autorises, $lettre) === false) {
-                return "caractère interdit : [" . $lettre . "] à la position " . ($i + 1);
-            }
-        }
-        return "OK";
-    }
+	// Valider toutes les données d'un joueur (ajout ou modification)
+	public function valider_donnees_joueur($id, $nom, $prenom, $licence, $taille, $poids) {
+		// Vérifier que les champs obligatoires ne sont pas vides
+		if (empty($nom) || empty($prenom)) {
+			return "Le nom et le prénom ne peuvent être vides.";
+		}
 
-    // Vérifier toutes les données d'un joueur
-    // Utilisé pour l'ajout et la modification
-    public function validerDonneesJoueur($id, $nom, $prenom, $licence, $taille, $poids) {
-        // Vérification des champs vides et en chiffres
-        if (empty($nom) || empty($prenom) || !is_numeric($licence) || $licence <= 0) {
-            return "La licence doit être un nombre et les noms ne peuvent être vides.";
-        }
+		// Vérifier que la licence est un nombre positif
+		if (!is_numeric($licence) || $licence <= 0) {   return "La licence doit être un nombre positif.";}
 
-        // Vérification des minimum (poids et taille)
-        if (!is_numeric($taille) || $taille < 80)   return "La taille doit être d'au moins 80 cm.";
-        if (!is_numeric($poids) || $poids < 20)     return "Le poids doit être d'au moins 20 kg.";
+		// Vérifier les valeurs minimales de taille et poids
+		if (!is_numeric($taille) || $taille < 80) {     return "La taille doit être d'au moins 80 cm.";}
+		if (!is_numeric($poids) || $poids < 20) {		return "Le poids doit être d'au moins 20 kg.";}
 
-        // Vérification du format du texte 
-        $resNom = $this->verifierFormatTexte($nom);
-        if ($resNom !== "OK")                       return "Format NOM incorrect : " . $resNom; 
-        
-        $resPre = $this->verifierFormatTexte($prenom);
-        if ($resPre !== "OK")                       return "Format PRÉNOM incorrect : " . $resPre; 
+		// Vérifier le format du nom
+		$res_nom = $this->verifier_format_texte($nom);
+		if ($res_nom !== "OK") {            			return "Format NOM incorrect : " . $res_nom;}
+		
+		// Vérifier le format du prénom
+		$res_pre = $this->verifier_format_texte($prenom);
+		if ($res_pre !== "OK") {            			return "Format PRÉNOM incorrect : " . $res_pre;}
 
-        // Vérification doublon (Nom et prénom égaux mais avec une autre licence)
-        $doublon = ModeleJoueur::trouverParNomPrenom($nom, $prenom, $id);
-        if ($doublon) {
-            if ($doublon['Numero_licence'] != $licence) {
-                return "Cette personne existe déjà (Licence : " . $doublon['Numero_licence'] . ").";
-            }
-        }
+		// Vérifier qu'il n'existe pas déjà un joueur avec ce nom/prénom
+		$doublon = Joueur::trouver_par_nom_prenom($nom, $prenom, $id);
+		if ($doublon) {
+			if ($doublon->get_numero_licence() != $licence) {
+				return "Cette personne existe déjà (Licence : " . $doublon->get_numero_licence() . ").";
+			}
+		}
 
-        // Vérification si la licence appartient à quelqu'un d'autre
-        if (ModeleJoueur::licenceExisteDeja($licence, $id)) {
-            return "Le numéro de licence $licence est déjà attribué à un autre joueur.";
-        }
+		// Vérifier que la licence n'est pas déjà attribuée à un autre joueur
+		if (Joueur::licence_existe_deja($licence, $id)) {
+			return "Le numéro de licence $licence est déjà attribué à un autre joueur.";
+		}
 
-        return "OK";
-    }
+		return "OK";
+	}
 
-    public function lister() {
-        if (isset($_GET['id_edition'])) {
-            $idEdition = (int)$_GET['id_edition'];
-        } else {
-            $idEdition = 0;
-        }
-        $listeJoueurs = ModeleJoueur::recupererTout();
-        require_once '../Vues/PageListeJoueurs.php';
-    }
+	// Afficher la liste des joueurs actifs
+	public function lister() {
+		// Vérifier si un joueur est en cours d'édition
+		if (isset($_GET['id_edition'])) {
+			$id_edition = (int)$_GET['id_edition'];
+		} else {
+			$id_edition = 0;
+		}
+		
+		// Récupérer tous les joueurs actifs
+		$liste_joueurs = Joueur::recuperer_actifs();
+		
+		// Afficher la vue
+		require_once '../Vues/PageListeJoueurs.php';
+	}
 
-    public function ajouter() {
-        $nom = $_POST['nom'];
-        $prenom = $_POST['prenom'];
-        $licence = $_POST['licence'];
-        $date_n = $_POST['date_naissance'];
-        $taille = $_POST['taille'];
-        $poids = $_POST['poids'];
-        $statut = $_POST['statut'];
+	// Ajouter un nouveau joueur
+	public function ajouter() {
+		$nom = $_POST['nom'];
+		$prenom = $_POST['prenom'];
+		$licence = $_POST['licence'];
+		$date_n = $_POST['date_naissance'];
+		$taille = $_POST['taille'];
+		$poids = $_POST['poids'];
+		$statut = $_POST['statut'];
 
-        $erreur = $this->validerDonneesJoueur(0, $nom, $prenom, $licence, $taille, $poids);
+		// Valider les données
+		$erreur = $this->valider_donnees_joueur(0, $nom, $prenom, $licence, $taille, $poids);
 
-        if ($erreur !== "OK") {
-            $_SESSION['erreur'] = $erreur;
-            header('Location: ControleurJoueur.php');
-            exit();
-        }
+		if ($erreur !== "OK") {
+			$_SESSION['erreur'] = $erreur;
+			header('Location: ControleurJoueur.php');
+			exit();
+		}
 
-        // Si OK, On ajoute / restaure le joueur (restaurer = si statut = supprimé)
-        $joueurExistant = ModeleJoueur::trouverParLicence($licence);
-        $donnees = ['nom'=>$nom, 'prenom'=>$prenom, 'licence'=>$licence, 'date_naissance'=>$date_n, 'taille'=>$taille, 'poids'=>$poids, 'statut'=>$statut];
+		// Vérifier si un joueur avec cette licence existe déjà (restauration possible)
+		$joueur_existant = Joueur::trouver_par_licence($licence);
+		
+		// Créer un objet Joueur avec les données du formulaire
+		$nouveau_joueur = new Joueur();
+		$nouveau_joueur->set_numero_licence($licence);
+		$nouveau_joueur->set_nom($nom);
+		$nouveau_joueur->set_prenom($prenom);
+		$nouveau_joueur->set_date_naissance($date_n);
+		$nouveau_joueur->set_taille($taille);
+		$nouveau_joueur->set_poids($poids);
+		$nouveau_joueur->set_statut($statut);
 
-        if ($joueurExistant) {  // On restaure
-            ModeleJoueur::modifier($joueurExistant['Id_Joueurs'], $donnees);
-        } else {
-            ModeleJoueur::ajouter($donnees);
-        }
+		if ($joueur_existant) {
+			// Si le joueur existe déjà, on le restaure en modifiant ses données
+			Joueur::modifier($joueur_existant->get_id_joueurs(), $nouveau_joueur);
+		} else {
+			// Sinon, on l'ajoute
+			Joueur::ajouter($nouveau_joueur);
+		}
 
-        header('Location: ControleurJoueur.php');
-        exit();
-    }
+		header('Location: ControleurJoueur.php');
+		exit();
+	}
 
-    public function supprimer() {
-        if (isset($_POST['id'])) { 
-            ModeleJoueur::supprimer((int)$_POST['id']);
-        }
-        header('Location: ControleurJoueur.php');
-        exit();
-    }
+	// Supprimer un joueur (soft delete : changement de statut)
+	public function supprimer() {
+		// Vérifier que l'ID est bien envoyé
+		if (isset($_POST['id'])) {
+			Joueur::supprimer((int)$_POST['id']);
+		}
+		header('Location: ControleurJoueur.php');
+		exit();
+	}
 }
 
 
 
 $gestionnaire = new ControleurJoueur();
+
 $action = "lister";
-if (isset($_POST['action'])) { $action = $_POST['action']; } 
-elseif (isset($_GET['action'])) { $action = $_GET['action']; }
+if (isset($_POST['action'])) {
+	$action = $_POST['action'];
+} elseif (isset($_GET['action'])) {
+	$action = $_GET['action'];
+}
 
 switch ($action) {
-    case "valider_ajout": $gestionnaire->ajouter(); break;
-    case "supprimer": $gestionnaire->supprimer(); break;
-    case "enregistrer_modif":
-        if (isset($_POST['id'])) {
-            $id = (int)$_POST['id'];
-            
-            // Vérifications
-            $erreur = $gestionnaire->validerDonneesJoueur($id, $_POST['nom'], $_POST['prenom'], $_POST['licence'], $_POST['taille'], $_POST['poids']);
-            
-            if ($erreur !== "OK") {
-                $_SESSION['erreur'] = $erreur;
-                header("Location: ControleurJoueur.php?id_edition=$id");
-            } else {
-                $d = ['nom'=>$_POST['nom'], 'prenom'=>$_POST['prenom'], 'licence'=>$_POST['licence'], 'date_naissance'=>$_POST['date_naissance'], 'taille'=>$_POST['taille'], 'poids'=>$_POST['poids'], 'statut'=>$_POST['statut']];
-                ModeleJoueur::modifier($id, $d);
-                header('Location: ControleurJoueur.php');
-            }
-            exit();
-        }
-        break;
-    default: $gestionnaire->lister(); break;
+	case "valider_ajout":
+		$gestionnaire->ajouter();
+		break;
+		
+	case "supprimer":
+		$gestionnaire->supprimer();
+		break;
+		
+	case "enregistrer_modif":
+		// Vérifier que l'ID est bien envoyé
+		if (isset($_POST['id'])) {
+			$id = (int)$_POST['id'];
+			
+			// Valider les données
+			$erreur = $gestionnaire->valider_donnees_joueur(
+				$id,
+				$_POST['nom'],
+				$_POST['prenom'],
+				$_POST['licence'],
+				$_POST['taille'],
+				$_POST['poids']
+			);
+			
+			if ($erreur !== "OK") {
+				$_SESSION['erreur'] = $erreur;
+				header("Location: ControleurJoueur.php?id_edition=$id");
+			} else {
+				// Créer un objet Joueur avec les données modifiées
+				$joueur_modifie = new Joueur();
+				$joueur_modifie->set_numero_licence($_POST['licence']);
+				$joueur_modifie->set_nom($_POST['nom']);
+				$joueur_modifie->set_prenom($_POST['prenom']);
+				$joueur_modifie->set_date_naissance($_POST['date_naissance']);
+				$joueur_modifie->set_taille($_POST['taille']);
+				$joueur_modifie->set_poids($_POST['poids']);
+				$joueur_modifie->set_statut($_POST['statut']);
+				
+				// Enregistrer les modifications
+				Joueur::modifier($id, $joueur_modifie);
+				header('Location: ControleurJoueur.php');
+			}
+			exit();
+		}
+		break;
+		
+	default:
+		$gestionnaire->lister();
+		break;
 }

@@ -1,39 +1,34 @@
 <?php
 session_start();
 
-// Importation du modèle de l'entraîneur
-require_once '../Modeles/ModeleEntraineur.php';
+require_once '../Modeles/Classes/Entraineur.php';
 
-// On vérifie que le formulaire a bien été envoyé via la méthode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Récupération des données saisies dans la Vue
-    $identifiantSaisi = $_POST['identifiant'];
-    $motDePasseSaisi = $_POST['mdp'];
+	$identifiant_saisi = $_POST['identifiant'];
+	$mot_de_passe_saisi = $_POST['mdp'];
 
-    // On regarde si l'entraîneur existe dans la base de données
-    $donneesEntraineur = ModeleEntraineur::verifierIdentifiant($identifiantSaisi);
+	// Chercher l'entraîneur avec les identifiants
+	$entraineur = Entraineur::verifier_identifiant($identifiant_saisi);
 
-    // On vérifie si l'entraîneur existe et on compare les mots de passes
-    if ($donneesEntraineur && $motDePasseSaisi === $donneesEntraineur['mdp']) {
-        
-        // On stocke les informations importantes dans la session
-        $_SESSION['id_entraineur'] = $donneesEntraineur['Id_Entraineur'];
-        $_SESSION['nom_entraineur'] = $donneesEntraineur['nom'];
-        $_SESSION['prenom_entraineur'] = $donneesEntraineur['prenom'];
+	// Vérifier que l'entraîneur existe et que le mot de passe est correct
+	if ($entraineur && $entraineur->verifier_mot_de_passe($mot_de_passe_saisi)) {
+		// Enregistrer les informations de l'entraîneur dans la session
+		$_SESSION['id_entraineur'] =        $entraineur->get_id_entraineur();
+		$_SESSION['nom_entraineur'] =       $entraineur->get_nom();
+		$_SESSION['prenom_entraineur'] =    $entraineur->get_prenom();
 
-        // Redirection vers la page d'accueil
-        header('Location: ../Vues/PageAccueil.php');
-        exit(); 
-        
-    } else {
-        // Sinon : on renvoit à la vue une erreur
-        $_SESSION['erreur'] = "Identifiant ou mot de passe incorrect.";
-        header('Location: ../Vues/PageConnexion.php');
-        exit();
-    }
+		// Rediriger vers la page d'accueil
+		header('Location: ../Vues/PageAccueil.php');
+		exit();
+		
+	} else {
+		// Enregistrer le message d'erreur dans la session
+		$_SESSION['erreur'] = "Identifiant ou mot de passe incorrect.";
+		header('Location: ../Vues/PageConnexion.php');
+		exit();
+	}
 } else {
-    // Si on arrive sur ce fichier, on redirige vers la page de connexion
-    header('Location: ../Vues/PageConnexion.php');
-    exit();
+	// Si ce n'est pas une requête POST, on redirige vers la page de connexion
+	header('Location: ../Vues/PageConnexion.php');
+	exit();
 }

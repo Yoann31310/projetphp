@@ -9,8 +9,8 @@
 <body>
     <?php
     // Initialisation des variables si elles ne sont pas définies par le contrôleur
-    if (!isset($idEdition)) $idEdition = 0;
-    if (!isset($listeJoueurs)) $listeJoueurs = [];
+    if (!isset($id_edition)) $id_edition = 0;
+    if (!isset($liste_joueurs)) $liste_joueurs = [];
     ?>
 
     <?php 
@@ -78,85 +78,86 @@
                 </tr>
 
 
-                <?php if (isset($listeJoueurs) && !empty($listeJoueurs)) : ?>
+                <?php if (isset($liste_joueurs) && !empty($liste_joueurs)) : ?>
                     
-                    <?php foreach ($listeJoueurs as $joueur) : ?>
+                    <?php foreach ($liste_joueurs as $joueur) : ?>
                         <tr>
                             <form action="../Controleurs/ControleurJoueur.php" method="POST">
                                 <input type="hidden" name="action" value="enregistrer_modif">
-                                <input type="hidden" name="id" value="<?php echo $joueur['Id_Joueurs']; ?>">
+                                <input type="hidden" name="id" value="<?php echo $joueur->get_id_joueurs(); ?>">
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="text" name="licence" value="<?php echo $joueur['Numero_licence']; ?>" required style="width: 80px;">
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="text" name="licence" value="<?php echo $joueur->get_numero_licence(); ?>" required style="width: 80px;">
                                     <?php else : ?>
-                                        <?php echo $joueur['Numero_licence']; ?>
+                                        <?php echo $joueur->get_numero_licence(); ?>
                                     <?php endif; ?>
                                 </td>
                                 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="text" name="nom" value="<?php echo $joueur['nom']; ?>" required>
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="text" name="nom" value="<?php echo $joueur->get_nom(); ?>" required>
                                     <?php else : ?>
-                                        <?php echo strtoupper($joueur['nom']); ?>
+                                        <?php echo strtoupper($joueur->get_nom()); ?>
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="text" name="prenom" value="<?php echo $joueur['prenom']; ?>" required>
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="text" name="prenom" value="<?php echo $joueur->get_prenom(); ?>" required>
                                     <?php else : ?>
-                                        <?php echo $joueur['prenom']; ?>
+                                        <?php echo $joueur->get_prenom(); ?>
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="date" name="date_naissance" value="<?php echo $joueur['date_naissance']; ?>" required>
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="date" name="date_naissance" value="<?php echo $joueur->get_date_naissance(); ?>" required>
                                     <?php else : ?>
-                                        <?php echo $joueur['date_naissance']; ?>
+                                        <?php echo $joueur->get_date_naissance(); ?>
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="number" name="taille" value="<?php echo $joueur['taille']; ?>" min="80" required style="width: 60px;">
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="number" name="taille" value="<?php echo $joueur->get_taille(); ?>" min="80" required style="width: 60px;">
                                     <?php else : ?>
-                                        <?php echo $joueur['taille']; ?> cm
+                                        <?php echo $joueur->get_taille(); ?> cm
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <input type="number" name="poids" value="<?php echo $joueur['poids']; ?>" min="20" required style="width: 60px;">
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <input type="number" name="poids" value="<?php echo $joueur->get_poids(); ?>" min="20" required style="width: 60px;">
                                     <?php else : ?>
-                                        <?php echo $joueur['poids']; ?> kg
+                                        <?php echo $joueur->get_poids(); ?> kg
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
                                         <select name="statut">
-                                            <option value="Actif" <?php if($joueur['statut'] == 'Actif') echo 'selected'; ?>>Actif</option>
-                                            <option value="Blessé" <?php if($joueur['statut'] == 'Blessé') echo 'selected'; ?>>Blessé</option>
-                                            <option value="Suspendu" <?php if($joueur['statut'] == 'Suspendu') echo 'selected'; ?>>Suspendu</option>
-                                            <option value="Absent" <?php if($joueur['statut'] == 'Absent') echo 'selected'; ?>>Absent</option>
+                                            <option value="Actif" <?php if($joueur->get_statut() == 'Actif') echo 'selected'; ?>>Actif</option>
+                                            <option value="Blessé" <?php if($joueur->get_statut() == 'Blessé') echo 'selected'; ?>>Blessé</option>
+                                            <option value="Suspendu" <?php if($joueur->get_statut() == 'Suspendu') echo 'selected'; ?>>Suspendu</option>
+                                            <option value="Absent" <?php if($joueur->get_statut() == 'Absent') echo 'selected'; ?>>Absent</option>
                                         </select>
                                     <?php else : ?>
-                                        <?php echo $joueur['statut']; ?>
+                                        <?php echo $joueur->get_statut(); ?>
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?php if ($idEdition == $joueur['Id_Joueurs']) : ?>
-                                        <button type="submit" class="bouton-valider">Valider</button>
-                                        <a href="../Controleurs/ControleurJoueur.php?action=lister">Annuler</a>
+                                    <?php if ($id_edition == $joueur->get_id_joueurs()) : ?>
+                                        <button type="submit" class="bouton-valider" style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Valider</button>
+                                        <a href="../Controleurs/ControleurJoueur.php?action=lister" style="padding: 5px 10px;">Annuler</a>
                                     <?php else : ?>
-                                        <a href="ControleurJoueur.php?action=lister&id_edition=<?php echo $joueur['Id_Joueurs']; ?>" class="bouton-modifier">Modifier</a>
+                                        <!-- MODIF : Utiliser get_id_joueurs() au lieu de ['Id_Joueurs'] -->
+                                        <a href="../Controleurs/ControleurJoueur.php?action=lister&id_edition=<?php echo $joueur->get_id_joueurs(); ?>" class="bouton-modifier">Modifier</a>
 
                                         <form action="../Controleurs/ControleurJoueur.php" method="POST" style="display:inline;">
                                             <input type="hidden" name="action" value="supprimer">
-                                            <input type="hidden" name="id" value="<?php echo $joueur['Id_Joueurs']; ?>">
+                                            <input type="hidden" name="id" value="<?php echo $joueur->get_id_joueurs(); ?>">
                                             <button type="submit" class="bouton-supprimer" style="background:red; color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;">
                                                 Supprimer
                                             </button>
