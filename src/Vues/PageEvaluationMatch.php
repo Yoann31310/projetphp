@@ -60,7 +60,7 @@ if (!isset($_SESSION['id_entraineur'])) {
                                                                                         name="note_<?php echo $p['Id_Joueurs']; ?>" 
                                                                                         min="0" 
                                                                                         max="10" 
-                                                                                        step="0.5"
+                                                                                        step="0.01"
                                                                                         value="
                                                                                         <?php
                                                                                         if (!empty($p['evaluation'])) {

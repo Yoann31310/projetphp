@@ -142,7 +142,7 @@
                                         <td><?php echo $p['nom_poste']; ?></td>
                                         <td>
                                             <input type="number" name="evaluation_<?php echo $p['Id_Joueurs']; ?>" 
-                                                   min="0" max="10" step="0.5" 
+                                                   min="0" max="10" step="0.01" 
                                                    value="<?php echo $p['evaluation'] ?? ''; ?>" 
                                                    style="width:60px;">
                                         </td>
