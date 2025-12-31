@@ -90,4 +90,17 @@ class MatchDAO {
 			die("Erreur lors de la modification du match : " . $e->getMessage());
 		}
 	}
+
+	
+    // Supprimer définitivement un match
+    public static function supprimer($id) {
+        try {
+            $db = Database::getInstance();
+            $sql = "DELETE FROM Matchs WHERE Id_Matchs = :id";
+            $req = $db->prepare($sql);
+            return $req->execute(['id' => $id]);
+        } catch (PDOException $e) {
+            die("Erreur lors de la suppression du match : " . $e->getMessage());
+        }
+    }
 }

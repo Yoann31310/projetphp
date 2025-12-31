@@ -18,6 +18,8 @@
             </div>
         <?php } ?>
 
+
+        
         <?php if ($mode_match == "PRE_MATCH") { ?>
             
             <section style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
@@ -38,6 +40,16 @@
 
                     <button type="submit">Enregistrer Infos</button>
                 </form>
+
+                <div style="text-align:right; margin-bottom:10px;">
+                    <form action="../Controleurs/ControleurMatch.php" method="POST" style="display:inline;"
+                        onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ce match et toutes ses données ?');">
+                        <input type="hidden" name="action" value="supprimer">
+                        <input type="hidden" name="id" value="<?php echo $match->get_id_matchs(); ?>">
+                        <button type="submit" style="background:#e74c3c; color:white; padding:8px 15px; border:none; cursor:pointer;">
+                        Supprimer le match </button>
+                    </form>
+        </div>
             </section>
 
             <section style="background:#fff; padding:20px; border:1px solid #ddd;">
@@ -143,13 +155,18 @@
                                         <td>
                                             <input type="number" name="evaluation_<?php echo $p['Id_Joueurs']; ?>" 
                                                    min="0" max="10" step="0.01" 
-                                                   value="<?php echo $p['evaluation'] ?? ''; ?>" 
+                                                   value="<?php if (isset($p['evaluation'])) { 
+                                                        echo $p['evaluation']; } 
+                                                        else { echo ''; } ?>"
                                                    style="width:60px;">
                                         </td>
                                         <td>
                                             <textarea name="commentaire_<?php echo $p['Id_Joueurs']; ?>" 
                                                       rows="2" 
-                                                      style="width:100%;"><?php echo $p['commentaire'] ?? ''; ?></textarea>
+                                                      style="width:100%;"><?php if (isset($p['commentaire'])) { 
+                                                        echo $p['commentaire']; } 
+                                                        else { echo ''; } ?>
+                                                    </textarea>
                                         </td>
                                     </tr>
                                 <?php } ?>

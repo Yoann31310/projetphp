@@ -182,6 +182,18 @@ class ControleurMatch {
 		header("Location: ControleurMatch.php");
 		exit();
 	}
+
+	// Supprimer un match et toutes ses participations
+	public function supprimer() {
+		$id = (int)$_POST['id'];
+
+		// Supprimer d'abord toutes les participations liées pour éviter erreurs dans BD
+		Participation::vider_feuille($id);
+
+		Matchs::supprimer($id);
+		header('Location: ControleurMatch.php');
+		exit();
+	}
 }
 
 $gestionnaire = new ControleurMatch();
@@ -200,5 +212,6 @@ switch ($action) {
 	case "valider_ajout":   	    	$gestionnaire->ajouter();           break;
 	case "enregistrer_modif":   		$gestionnaire->modifier();  	    break;
 	case "enregistrer_feuille": 		$gestionnaire->valider_feuille();   break;
+	case "supprimer":					$gestionnaire->supprimer();			break;
 	default:                    		$gestionnaire->lister();            break;
 }

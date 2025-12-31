@@ -48,19 +48,13 @@ class Matchs {
 	}
     
     // Récupérer tous les matchs
-    public static function recuperer_tout() {
-        return MatchDAO::recuperer_tout();
-    }
+    public static function recuperer_tout() {               return MatchDAO::recuperer_tout();}
 
-    public static function trouver_par_id($id) {
-        return MatchDAO::trouver_par_id($id);
-    }
+    public static function trouver_par_id($id) {            return MatchDAO::trouver_par_id($id);}
 
-    public static function ajouter(Matchs $match) {
-        return MatchDAO::ajouter($match);
-    }
+    public static function ajouter(Matchs $match) {         return MatchDAO::ajouter($match);}
 
-    public static function modifier($id, Matchs $match) {
-        return MatchDAO::modifier($id, $match);
-    }
+    public static function modifier($id, Matchs $match) {   return MatchDAO::modifier($id, $match); }
+
+    public static function supprimer($id) {                 return MatchDAO::supprimer($id);}
 }

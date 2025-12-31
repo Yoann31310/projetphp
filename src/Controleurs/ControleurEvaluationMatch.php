@@ -34,12 +34,13 @@ class ControleurEvaluationMatch {
                 // Parcourir tous les joueurs et enregistrer leur évaluation
                 foreach ($tous_les_ids as $id_j) {
                         // Récupérer les valeurs depuis le formulaire
-                        $note = isset($_POST['evaluation_' . $id_j]) && $_POST['evaluation_' . $id_j] !== '' 
-                                ? (float)$_POST['evaluation_' . $id_j] 
-                                : null;
-                        $commentaire = isset($_POST['commentaire_' . $id_j]) 
-                                ? trim($_POST['commentaire_' . $id_j]) 
-                                : '';
+                        if (isset($_POST['evaluation_' . $id_j]) && $_POST['evaluation_' . $id_j] !== '') {
+                                $note = (float)$_POST['evaluation_' . $id_j];
+                        } else {        $note = null;}
+                        
+                        if (isset($_POST['commentaire_' . $id_j])) {
+                                $commentaire = $_POST['commentaire_' . $id_j];
+                        } else {        $commentaire = '';}
                         
                         // Enregistrer l'évaluation dans la base de données seulement si une note est fournie
                         if ($note !== null) {
