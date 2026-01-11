@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$_SESSION['prenom_entraineur'] =    $entraineur->get_prenom();
 
 		// Rediriger vers la page d'accueil
-		header('Location: ../Vues/PageAccueil.php');
+		header('Location: ../Controleurs/ControleurAccueil.php');
 		exit();
 		
 	} else {

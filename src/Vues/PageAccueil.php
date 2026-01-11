@@ -1,5 +1,4 @@
 <?php 
-session_start(); 
 
 // Si la session n'existe pas, on redirige vers la connexion
 if (!isset($_SESSION['id_entraineur'])) {
@@ -14,8 +13,8 @@ if (!isset($_SESSION['id_entraineur'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil - Gestion Handball</title>
-    <link rel="stylesheet" href="css/styleAccueil.css">
-    <link rel="stylesheet" href="css/styleMenu.css">
+    <link rel="stylesheet" href="../Vues/css/styleAccueil.css">
+    <link rel="stylesheet" href="../Vues/css/styleMenu.css">
 </head>
 <body>
 
@@ -35,16 +34,35 @@ if (!isset($_SESSION['id_entraineur'])) {
         <section class="grille-statistiques">
             <div class="carte-info">
                 <h3>Joueurs Actifs</h3>
-                <p class="chiffre">15</p>
+                <p class="chiffre"><?php echo $nb_joueurs; ?></p>
             </div>
             <div class="carte-info">
                 <h3>Prochain Match</h3>
-                <p>Contre : <strong>HBC Nantes</strong></p>
-                <p>Date : 10/01/2026</p>
+                <?php if ($prochain_match): ?>
+                    <p>Contre : <strong><?php echo htmlspecialchars($prochain_match['nom_equipe_adverse']); ?></strong></p>
+                    <p>Date : <?php echo date('d/m/Y à H:i', strtotime($prochain_match['Date_heure'])); ?></p>
+                <?php else: ?>
+                    <p>Aucun match programmé</p>
+                <?php endif; ?>
             </div>
             <div class="carte-info">
                 <h3>Dernier Résultat</h3>
-                <p class="resultat-gagne">Victoire</p>
+                <?php if ($dernier_resultat): ?>
+                    <?php 
+                        $classe_resultat = '';
+                        if ($dernier_resultat['resultat'] == 'Gagnée') {
+                            $classe_resultat = 'resultat-gagne';
+                        } else if ($dernier_resultat['resultat'] == 'Perdue') {
+                            $classe_resultat = 'resultat-perdu';
+                        } else {
+                            $classe_resultat = 'resultat-nul';
+                        }
+                    ?>
+                    <p class="<?php echo $classe_resultat; ?>"><?php echo htmlspecialchars($dernier_resultat['resultat']); ?></p>
+                    <p><small>Contre <?php echo htmlspecialchars($dernier_resultat['nom_equipe_adverse']); ?></small></p>
+                <?php else: ?>
+                    <p>Aucun résultat</p>
+                <?php endif; ?>
             </div>
         </section>
     </main>
