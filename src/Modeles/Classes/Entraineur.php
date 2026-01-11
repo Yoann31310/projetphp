@@ -28,7 +28,7 @@ class Entraineur {
 
 
     public function verifier_mot_de_passe($mdp_saisi) {
-        return $mdp_saisi === $this->mdp;
+        return password_verify($mdp_saisi, $this->mdp);
     }
     
     // Return un objet Entraineur ou false)
