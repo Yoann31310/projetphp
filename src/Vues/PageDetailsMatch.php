@@ -116,7 +116,7 @@
 
                     <select name="resultat">
                         <option value="gagnée" <?php if($match->get_resultat()=="gagnée") echo "selected"; ?>>Gagnée</option>
-                        <option value="perdus" <?php if($match->get_resultat()=="perdus") echo "selected"; ?>>Perdus</option>
+                        <option value="perdue" <?php if($match->get_resultat()=="perdue") echo "selected"; ?>>perdue</option>
                         <option value="égalité" <?php if($match->get_resultat()=="égalité") echo "selected"; ?>>Égalité</option>
                     </select>
                     <button type="submit">Valider Score</button>

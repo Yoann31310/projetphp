@@ -94,4 +94,27 @@ class ParticipationDAO {
 			die("Erreur lors de l'évaluation du joueur : " . $e->getMessage());
 		}
 	}
+
+	// Joueur avec le plus de participations
+	public static function obtenir_top_participations($limite = 5) {
+		try {
+			$db = Database::getInstance();
+			
+			$sql = "SELECT j.nom, j.prenom, COUNT(p.Id_Joueurs) as nb_participations
+							FROM Joueurs j
+							LEFT JOIN Participer p ON j.Id_Joueurs = p.Id_Joueurs
+							WHERE j.statut != 'Supprimé'
+							GROUP BY j.Id_Joueurs
+							ORDER BY nb_participations DESC
+							LIMIT :limite";
+			
+			$req = $db->prepare($sql);
+			$req->bindValue(':limite', $limite, PDO::PARAM_INT);
+			$req->execute();
+			
+			return $req->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			die("Erreur top participations : " . $e->getMessage());
+		}
+	}
 }

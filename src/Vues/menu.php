@@ -9,7 +9,7 @@
             <li><a href="../Vues/PageAccueil.php" class="actif"     >Tableau de bord</a></li>
             <li><a href="../Controleurs/ControleurJoueur.php"       >Gestion des Joueurs</a></li>
             <li><a href="../Controleurs/ControleurMatch.php"        >Gérer mes matchs</a></li>
-            <li><a href="PageStatistiques.php"                      >Statistiques de l'équipe</a></li>
+            <li><a href="../Controleurs/ControleurStatistiques.php" >Statistiques de l'équipe</a></li>
         </ul>
         
         <!-- Bouton déconnexion -->
