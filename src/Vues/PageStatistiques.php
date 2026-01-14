@@ -6,6 +6,7 @@
     <title>Statistiques - Gestion Handball</title>
 <link rel="stylesheet" href="../Vues/css/styleAccueil.css">
 <link rel="stylesheet" href="../Vues/css/styleStatistiques.css">
+<link rel="stylesheet" href="../Vues/css/styleTableaux.css">
 </head>
 <body>
 
@@ -182,7 +183,39 @@
             <p>Aucune donnee de participation disponible.</p>
         <?php endif; ?>
     </div>
-
+<div class="section-stats">
+    <h2>Statistiques par Joueur</h2>
+    <table class="tableau-donnees">
+        <thead>
+            <tr>
+                <th>Joueur</th>
+                <th>Statut</th>
+                <th>Poste Préféré</th>
+                <th>Titularisations</th>
+                <th>Remplacements</th>
+                <th>Moyenne Notes</th>
+                <th>% Victoires</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($stats_joueurs)): ?>
+                <?php foreach ($stats_joueurs as $j): ?>
+                    <tr>
+                        <td><strong><?php echo strtoupper(htmlspecialchars($j['nom'])) . ' ' . htmlspecialchars($j['prenom']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($j['statut']); ?></td>
+                        <td><?php echo $j['poste_prefere'] ?? '-'; ?></td>
+                        <td><?php echo $j['nb_titularisations']; ?></td>
+                        <td><?php echo $j['nb_remplacements']; ?></td>
+                        <td><?php echo $j['moyenne_evaluations'] ?? '-'; ?></td>
+                        <td><?php echo $j['pct_victoires'] ? round($j['pct_victoires']) . '%' : '-'; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="7">Aucune donnée disponible</td></tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 </main>
 
 </body>

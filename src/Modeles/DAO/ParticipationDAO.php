@@ -117,4 +117,35 @@ class ParticipationDAO {
 			die("Erreur top participations : " . $e->getMessage());
 		}
 	}
+
+	// Statistiques complètes par joueur
+public static function obtenir_stats_joueurs() {
+    $db = Database::getInstance();
+    $sql = "
+        SELECT 
+            j.Id_Joueurs,
+            j.nom,
+            j.prenom,
+            j.statut,
+            COUNT(DISTINCT p.Id_Matchs) as nb_participations,
+            SUM(CASE WHEN p.feuille_match = 'titulaire' THEN 1 ELSE 0 END) as nb_titularisations,
+            SUM(CASE WHEN p.feuille_match = 'remplaçant' THEN 1 ELSE 0 END) as nb_remplacements,
+            ROUND(AVG(p.evaluation), 2) as moyenne_evaluations,
+            COUNT(DISTINCT CASE WHEN m.resultat = 'gagnée' THEN p.Id_Matchs END) as matchs_gagnes,
+            (COUNT(DISTINCT CASE WHEN m.resultat = 'gagnée' THEN p.Id_Matchs END) * 100.0 / 
+             NULLIF(COUNT(DISTINCT CASE WHEN m.resultat IS NOT NULL THEN p.Id_Matchs END), 0)) as pct_victoires,
+            (SELECT nom_poste 
+             FROM Participer p2 
+             WHERE p2.Id_Joueurs = j.Id_Joueurs 
+             GROUP BY nom_poste 
+             ORDER BY AVG(p2.evaluation) DESC, COUNT(*) DESC 
+             LIMIT 1) as poste_prefere
+        FROM Joueurs j
+        LEFT JOIN Participer p ON j.Id_Joueurs = p.Id_Joueurs
+        LEFT JOIN Matchs m ON p.Id_Matchs = m.Id_Matchs
+        GROUP BY j.Id_Joueurs, j.nom, j.prenom, j.statut
+        ORDER BY nb_participations DESC, moyenne_evaluations DESC
+    ";
+    return $db->query($sql)->fetchAll();
+}
 }

@@ -16,8 +16,6 @@ class ControleurStatistiques {
     public function afficher() {
         // Récupérer toutes les statistiques
         $stats_matchs = MatchDAO::obtenir_stats_globales();
-        $serie_en_cours = MatchDAO::obtenir_serie_en_cours();
-        $meilleure_serie = MatchDAO::obtenir_meilleure_serie();
         $prochain_match = MatchDAO::obtenir_prochain_match();
         $dernier_resultat = MatchDAO::obtenir_dernier_resultat();
         
@@ -25,6 +23,7 @@ class ControleurStatistiques {
         $age_moyen = JoueurDAO::calculer_age_moyen();
         
         $top_joueurs = ParticipationDAO::obtenir_top_participations(5);
+        $stats_joueurs = ParticipationDAO::obtenir_stats_joueurs();
         
         // Afficher la vue
         require_once '../Vues/PageStatistiques.php';
