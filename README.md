@@ -1,93 +1,143 @@
-# ProjetPHP
+# Application de Gestion d'Équipe de Handball
 
+## Introduction
 
+Cette application web permet de gérer une équipe de sport, ici de handball. Elle offre des fonctionnalités pour gérer les joueurs, organiser les matchs, composer les feuilles de match et consulter quelques  statistiques précises.
 
-## Getting started
+Le projet utilise une architecture MVC (Modèle-Vue-Contrôleur) avec de la programmation orientée objet (POO) pour structurer le code de manière claire et maintenable.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+---
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Accès à l'application
 
-## Add your files
+**URL de l'application** : https://projetphp.alwaysdata.net/Controleurs/ControleurAccueil.php
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+**Identifiants de connexion** :
+- **Identifiant** : `1573357`
+- **Mot de passe** : `azertyuiop`
 
-```
-cd existing_repo
-git remote add origin https://gitlab.info.iut-tlse3.fr/lln5097a/projetphp.git
-git branch -M main
-git push -uf origin main
-```
+---
 
-## Integrate with your tools
+## Structure du projet
 
-- [ ] [Set up project integrations](https://gitlab.info.iut-tlse3.fr/lln5097a/projetphp/-/settings/integrations)
+Le projet est organisé selon l'architecture MVC :
 
-## Collaborate with your team
+- **Controleurs/** : Contient les contrôleurs qui gèrent les actions utilisateur (ControleurJoueur, ControleurMatch, ControleurStatistiques, etc.)
+- **Modeles/** : Contient les modèles organisés en deux sous-dossiers
+  - **DAO/** : Classes d'accès aux données (JoueurDAO, MatchDAO, ParticipationDAO, etc.)
+  - **Classes/** : Classes métiers avec propriétés et méthodes (Joueur, Match, Participation, Entraineur)
+- **Vues/** : Contient les pages HTML/PHP affichées à l'utilisateur (PageListeJoueurs, PageListeMatchs, PageStatistiques, etc.)
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Un menu de navigation permet d'accéder aux trois sections principales :
+- Gestion des Joueurs
+- Gestion des Matchs (Gérer mes matchs)
+- Statistiques de l'équipe
 
-## Test and Deploy
+---
 
-Use the built-in continuous integration in GitLab.
+## Fonctionnalités implémentées
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 1. Gestion des Joueurs
 
-***
+- **Créer un joueur** : Permet d'ajouter un nouveau joueur avec ces informations suivantes (Prénom, nom, poids, statuts, etc)
+- **Ajouter un commentaire**
+- **Afficher la liste des joueurs**
+- **Modifier les attributs d'un joueur**
+- **Supprimer un joueur** : Suppression possible uniquement si le joueur n'a jamais participé à un match (il sera pas réellement supprimé).
 
-# Editing this README
+---
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### 2. Gestion des Matchs
 
-## Suggestions for a good README
+- **Créer un match** : Création d'un nouveau match avec choix dans date et lieu, nom de l'équipe adverse, et résultat (renseigné après le match)
+- **Afficher la liste des matchs** : Vue tous les matchs programmés et joués.
+- **Modifier les informations d'un match** : Modification possible seulement pour les matchs à venir. La date d'un match modifié ne peut pas être dans le passé.
+- **Supprimer un match** : Suppression possible uniquement pour les matchs qui n'ont pas encore eu lieu.
+- **Saisir le résultat d'un match joué** : Une fois le match passé, possibilité de saisir le résultat (Gagnée, Perdue, Égalité).
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
-Choose a self-explaining name for your project.
+### 3. Participation des Joueurs et Évaluation
+- **Sélectionner les joueurs pour un match à venir** :
+- Seuls les joueurs avec le statut "Actif" peuvent être sélectionnés
+- Séparation entre titulaires et remplaçants
+- Attribution d'un poste pour chaque joueur (Gardien, Pivot, Demi-centre, Arrière gauche, Arrière droit, Ailier gauche, Ailier droit). On peut mettre tous le même rôle si on veut.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- **Modifier la participation d'un joueur** : Modification de la composition d'équipe avant le match.
+- **Retirer un joueur d'une feuille de match** : Possibilité de retirer un joueur de la liste des participants.
+- **Vérifier les quotas réglementaires** : Le système vérifie automatiquement qu'il y a entre 5 et 7 joueurs titulaires et au maximum 7 remplaçants
+- **Empêcher la modification après le match** : Une fois le match joué, la feuille de match ne peut plus être modifiée.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- **Évaluer les joueurs après le match** : Pour chaque joueur ayant participé, possibilité de saisir une note sur 10 et un commentaire sur la performance
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### 4. Statistiques
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+**Statistiques globales** comme le nombre total de matchs joués, le nombre de victoires avec pourcentage, etc...
+**Tableau détaillé par joueur** avec les statut actuels du joueur, le pourcentage de matchs gagnés parmi ceux auxquels le joueur a participé, etc...
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+---
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Règles de gestion
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Règles pour les Joueurs
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+**Validation des données** :
+- Le nom et le prénom doivent contenir au minimum 3 caractères
+- Seules les lettres (avec accents autorisés) et les tirets sont acceptés
+- La taille doit être d'au moins 80 cm
+- Le poids doit être d'au moins 20 kg
+- Le numéro de licence doit être unique
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+**Statuts possibles** :
+- Actif : Le joueur peut participer aux matchs
+- Blessé : Le joueur ne peut pas participer
+- Suspendu : Le joueur ne peut pas participer
+- Absent : Le joueur ne peut pas participer
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+**Suppression** : Un joueur ne peut être supprimé que s'il n'a jamais participé à aucun match. En cas de suppression, il est pas réellement supprimé de la BD, mais juste plus affiché
 
-## License
-For open source projects, say how it is licensed.
+---
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Règles pour les Matchs
+
+**Gestion des dates** :
+- La date et l'heure d'un match ne peuvent pas être dans le passé
+- Cette règle s'applique lors de la création et de la modification d'un match
+
+**Affichage adaptatif selon la date** :
+- Si le match n'a pas encore eu lieu : affichage du formulaire de composition d'équipe
+- Si le match est passé : affichage du formulaire de saisie du résultat et d'évaluation des joueurs
+
+**Résultats possibles** : Gagnée / Perdue / Égalité
+
+**Modification et suppression** :
+- La modification des informations d'un match n'est possible que si le match n'a pas encore eu lieu
+- La suppression d'un match n'est possible que si le match n'a pas encore eu lieu
+
+---
+
+### Règles pour les Feuilles de Match
+- Nombre de titulaires : entre 5 et 7 obligatoirement
+- Nombre de remplaçants : maximum 7
+
+- Seuls les joueurs ayant le statut "Actif" peuvent être sélectionnés
+- Chaque joueur participant doit avoir un poste assigné
+
+- Tout les postes sont disponibles et il n'y aucune restriction dessus, ce qui veut dire que tout le monde peut théoriquement être au même poste.
+
+**Protection des données** :
+- Une fois le match joué, la composition de l'équipe ne peut plus être modifiée. Cela garantit que l'historique soit toujours bien intégré.
+
+---
+
+## Côté fonctionnel 
+- L'application respecte l'architecture MVC, avec Modèle DAO et classes métiers, Vue avec html/css/php et controleur qui charge la vue avec les données appropriées
+- Le projet utilise la POO avec les classes métiers, qui contiennent des méthodes privées, ou static, que tout le monde peut utiliser
+- La classe Database utilise le pattern Singleton, pour qu'il n'y ait qu'une seule instance de connexion à la BD
+- L'application utilise les sessions PHP, et chaque page renvoit sur la page de connexion si la sesssion est non active
+> Pour les matchs, l'application compare la date actuelle avec le match pour savoir s'il est passé ou non. L'interface change donc, pour la feuille de match, ou la sélection des joueurs.
+> Cette logique garantit qu'on ne puisse pas modifier un match ou évaluer un joueur participant dans un match passé, ni composer une équipe après la date d'un match passée
+- Les mdps sont hachés dans la BD, et on utilise password_verify en php pour l'authentification. 
+- Toutes les requêtes SQL utilisent des requêtes préparées, ce qui garantit normalement des problèmes de sécurité 
