@@ -1,5 +1,16 @@
 <?php
 session_start();
+require_once 'jwt_utils.php';
+
+$secret = 'random';
+
+// On vérifie si le jeton existe ET s'il est encore valide
+if (!isset($_SESSION['jwt']) || !is_jwt_valid($_SESSION['jwt'], $secret)) {
+    // Le jeton a expiré ou n'existe pas !
+    session_destroy();
+    header('Location: ../Vues/PageConnexion.php');
+    exit();
+}
 
 // Rediriger si non connecté
 if (!isset($_SESSION['id_entraineur'])) {
