@@ -1,8 +1,9 @@
 <?php
 session_start();
 
-// Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-if (!isset($_SESSION['id_entraineur'])) {
+require_once 'config_api_jwt.php';
+
+if (!verifier_authentification()) {
 	header('Location: ../Vues/PageConnexion.php');
 	exit();
 }
@@ -11,9 +12,11 @@ require_once '../Modeles/Classes/Matchs.php';
 require_once '../Modeles/Classes/Joueur.php';
 require_once '../Modeles/Classes/Participation.php';
 
-class ControleurMatch {
+class ControleurMatch
+{
 	// Vérifier que les quotas de la feuille de match sont respectés
-	private function valider_quotas_feuille($participants) {
+	private function valider_quotas_feuille($participants)
+	{
 		$nb_titulaires = 0;
 		$nb_remplacants = 0;
 
@@ -27,37 +30,46 @@ class ControleurMatch {
 		}
 
 		// Vérifier les quotas réglementaires
-		if ($nb_titulaires < 5) {   return "Nombre de titulaires insuffisant : 5 minimum (actuellement : $nb_titulaires).";}
-		if ($nb_titulaires > 7) {   return "Trop de titulaires : 7 maximum (actuellement : $nb_titulaires).";}		
-		if ($nb_remplacants > 7) {  return "Trop de remplaçants : 7 maximum (actuellement : $nb_remplacants).";}
+		if ($nb_titulaires < 5) {
+			return "Nombre de titulaires insuffisant : 5 minimum (actuellement : $nb_titulaires).";
+		}
+		if ($nb_titulaires > 7) {
+			return "Trop de titulaires : 7 maximum (actuellement : $nb_titulaires).";
+		}
+		if ($nb_remplacants > 7) {
+			return "Trop de remplaçants : 7 maximum (actuellement : $nb_remplacants).";
+		}
 
-        return "OK";
+		return "OK";
 	}
 
 	// Vérifier que la date-heure du match n'est pas dans le passé
-    private function valider_date_heure($date, $heure) {
-        $date_heure_match = strtotime($date . " " . $heure);
-        $maintenant = time();
-        
-        if ($date_heure_match < $maintenant) {
-            return "Impossible de créer/modifier un match dans le passé.";
-        }
-        
-        return "OK";
-    }
+	private function valider_date_heure($date, $heure)
+	{
+		$date_heure_match = strtotime($date . " " . $heure);
+		$maintenant = time();
+
+		if ($date_heure_match < $maintenant) {
+			return "Impossible de créer/modifier un match dans le passé.";
+		}
+
+		return "OK";
+	}
 
 	// Afficher la liste de tous les matchs
-	public function lister() {
+	public function lister()
+	{
 		$liste_matchs = Matchs::recuperer_tout();
 		require_once '../Vues/PageListeMatchs.php';
 	}
 
 	// Afficher les détails d'un match
-	public function details() {
+	public function details()
+	{
 		// Vérifier que l'ID du match est fourni
 		if (isset($_GET['id'])) {
-			$id_match = (int)$_GET['id'];
-			
+			$id_match = (int) $_GET['id'];
+
 			// Récupérer le match et ses participants
 			$match = Matchs::trouver_par_id($id_match);
 			$joueurs_actifs = Joueur::recuperer_actifs();
@@ -65,85 +77,92 @@ class ControleurMatch {
 
 			// Déterminer si le match est passé ou à venir
 			$date_match = strtotime($match->get_date_heure());
-			if ($date_match < time()) {				$mode_match = "POST_MATCH";
-			} else {                				$mode_match = "PRE_MATCH";
+			if ($date_match < time()) {
+				$mode_match = "POST_MATCH";
+			} else {
+				$mode_match = "PRE_MATCH";
 			}
-			
+
 			require_once '../Vues/PageDetailsMatch.php';
 		}
 	}
 
 	// Ajouter un nouveau match
-	public function ajouter() {
+	public function ajouter()
+	{
 		// Combiner la date et l'heure pour créer le datetime
-        $date = $_POST['date'];
-        $heure = $_POST['heure'];
-        
-        // Valider que la date-heure n'est pas dans le passé
-        $erreur = $this->valider_date_heure($date, $heure);
-        if ($erreur != "OK") {
-            $_SESSION['erreur'] = $erreur;
-            header('Location: ControleurMatch.php');
-            exit();
-        }
-        
-        $date_heure = $date . " " . $heure . ":00";
-        
-        // Créer un objet Match avec les données du formulaire
-        $nouveau_match = new Matchs();
-        $nouveau_match->set_date_heure($date_heure);
-        $nouveau_match->set_nom_equipe_adverse($_POST['adversaire']);
-        $nouveau_match->set_lieu($_POST['lieu']);
-        $nouveau_match->set_adresse($_POST['adresse']);
-        
-        // Enregistrer le match
-        Matchs::ajouter($nouveau_match);
-        
-        header('Location: ControleurMatch.php');
-        exit();
+		$date = $_POST['date'];
+		$heure = $_POST['heure'];
+
+		// Valider que la date-heure n'est pas dans le passé
+		$erreur = $this->valider_date_heure($date, $heure);
+		if ($erreur != "OK") {
+			$_SESSION['erreur'] = $erreur;
+			header('Location: ControleurMatch.php');
+			exit();
+		}
+
+		$date_heure = $date . " " . $heure . ":00";
+
+		// Créer un objet Match avec les données du formulaire
+		$nouveau_match = new Matchs();
+		$nouveau_match->set_date_heure($date_heure);
+		$nouveau_match->set_nom_equipe_adverse($_POST['adversaire']);
+		$nouveau_match->set_lieu($_POST['lieu']);
+		$nouveau_match->set_adresse($_POST['adresse']);
+
+		// Enregistrer le match
+		Matchs::ajouter($nouveau_match);
+
+		header('Location: ControleurMatch.php');
+		exit();
 	}
 
 	// Modifier un match existant
-	public function modifier() {
-        $id = (int)$_POST['id'];
-        $date = $_POST['date'];
-        $heure = $_POST['heure'];
-        
-        // Valider que la date-heure n'est pas dans le passé
-        $erreur = $this->valider_date_heure($date, $heure);
-        if ($erreur != "OK") {
-            $_SESSION['erreur'] = $erreur;
-            header("Location: ControleurMatch.php?action=details&id=$id");
-            exit();
-        }
-        
-        $date_heure = $date . " " . $heure;
-        
-        // Récupérer le résultat si disponible, sinon NULL
-        if (isset($_POST['resultat'])) {        $res = $_POST['resultat'];
-        } else {                                $res = NULL;
-        }
+	public function modifier()
+	{
+		$id = (int) $_POST['id'];
+		$date = $_POST['date'];
+		$heure = $_POST['heure'];
 
-        // Créer un objet Match
-        $match_modifie = new Matchs();
-        $match_modifie->set_date_heure($date_heure);
-        $match_modifie->set_nom_equipe_adverse($_POST['adversaire']);
-        $match_modifie->set_lieu($_POST['lieu']);
-        $match_modifie->set_adresse($_POST['adresse']);
-        $match_modifie->set_resultat($res);
-        
-        // Enregistrer les modifications
-        Matchs::modifier($id, $match_modifie);
-        
-        header("Location: ControleurMatch.php?action=details&id=$id");
-        exit();
-    }
+		// Valider que la date-heure n'est pas dans le passé
+		$erreur = $this->valider_date_heure($date, $heure);
+		if ($erreur != "OK") {
+			$_SESSION['erreur'] = $erreur;
+			header("Location: ControleurMatch.php?action=details&id=$id");
+			exit();
+		}
+
+		$date_heure = $date . " " . $heure;
+
+		// Récupérer le résultat si disponible, sinon NULL
+		if (isset($_POST['resultat'])) {
+			$res = $_POST['resultat'];
+		} else {
+			$res = NULL;
+		}
+
+		// Créer un objet Match
+		$match_modifie = new Matchs();
+		$match_modifie->set_date_heure($date_heure);
+		$match_modifie->set_nom_equipe_adverse($_POST['adversaire']);
+		$match_modifie->set_lieu($_POST['lieu']);
+		$match_modifie->set_adresse($_POST['adresse']);
+		$match_modifie->set_resultat($res);
+
+		// Enregistrer les modifications
+		Matchs::modifier($id, $match_modifie);
+
+		header("Location: ControleurMatch.php?action=details&id=$id");
+		exit();
+	}
 
 	// Enregistrer la feuille de match (sélection titulaires/remplaçants)
-	public function valider_feuille() {
-		$id_match = (int)$_POST['id_match'];
+	public function valider_feuille()
+	{
+		$id_match = (int) $_POST['id_match'];
 		$tous_les_ids = $_POST['tous_les_joueurs'];
-		
+
 		$liste_finale = array();
 
 		// Filtrer les joueurs qui participent (exclure les "non_partant")
@@ -169,7 +188,7 @@ class ControleurMatch {
 
 		// Vider l'ancienne feuille et enregistrer la nouvelle
 		Participation::vider_feuille($id_match);
-		
+
 		foreach ($liste_finale as $joueur) {
 			Participation::ajouter_participant(
 				$id_match,
@@ -178,14 +197,15 @@ class ControleurMatch {
 				$joueur['poste']
 			);
 		}
-		
+
 		header("Location: ControleurMatch.php");
 		exit();
 	}
 
 	// Supprimer un match et toutes ses participations
-	public function supprimer() {
-		$id = (int)$_POST['id'];
+	public function supprimer()
+	{
+		$id = (int) $_POST['id'];
 
 		// Supprimer d'abord toutes les participations liées pour éviter erreurs dans BD
 		Participation::vider_feuille($id);
@@ -208,10 +228,22 @@ if (isset($_GET['action'])) {
 
 // Exécuter l'action correspondante
 switch ($action) {
-	case "details":             		$gestionnaire->details();           break;
-	case "valider_ajout":   	    	$gestionnaire->ajouter();           break;
-	case "enregistrer_modif":   		$gestionnaire->modifier();  	    break;
-	case "enregistrer_feuille": 		$gestionnaire->valider_feuille();   break;
-	case "supprimer":					$gestionnaire->supprimer();			break;
-	default:                    		$gestionnaire->lister();            break;
+	case "details":
+		$gestionnaire->details();
+		break;
+	case "valider_ajout":
+		$gestionnaire->ajouter();
+		break;
+	case "enregistrer_modif":
+		$gestionnaire->modifier();
+		break;
+	case "enregistrer_feuille":
+		$gestionnaire->valider_feuille();
+		break;
+	case "supprimer":
+		$gestionnaire->supprimer();
+		break;
+	default:
+		$gestionnaire->lister();
+		break;
 }

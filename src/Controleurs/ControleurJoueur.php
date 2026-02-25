@@ -1,27 +1,30 @@
 <?php
 session_start();
 
-// Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-if (!isset($_SESSION['id_entraineur'])) {
+require_once 'config_api_jwt.php';
+
+if (!verifier_authentification()) {
         header('Location: ../Vues/PageConnexion.php');
         exit();
 }
 
 require_once '../Modeles/Classes/Joueur.php';
 
-class ControleurJoueur {
+class ControleurJoueur
+{
         // Vérifier le format du nom ou prénom (lettres avec accents, minimum 3 caractères)
-        private function verifier_format_texte($chaine) {
+        private function verifier_format_texte($chaine)
+        {
                 // Mesurer la longueur de la chaîne en UTF-8 pour gérer les accents
                 $longueur = mb_strlen($chaine, 'UTF-8');
-                
+
                 if ($longueur < 3) {
                         return "trop court (min 3 caractères)";
                 }
 
                 // Caractères autorisés (lettres avec accents et tiret)
                 $autorises = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ éèàçîïôûùêëÂÀÉÈÊËÎÏÔÛÙÇ-";
-                
+
                 for ($i = 0; $i < $longueur; $i++) {
                         // Extraire un caractère à la position i en UTF-8
                         $lettre = mb_substr($chaine, $i, 1, 'UTF-8');
@@ -34,36 +37,44 @@ class ControleurJoueur {
         }
 
         // Vérifier que le joueur a au moins 18 ans
-        private function verifier_age_minimum($date_naissance) {
+        private function verifier_age_minimum($date_naissance)
+        {
                 $date_obj = DateTime::createFromFormat('Y-m-d', $date_naissance);
-                
+
                 if (!$date_obj) {
                         return "Format de date invalide.";
                 }
-                
+
                 $aujourdhui = new DateTime();
                 $age = $aujourdhui->diff($date_obj)->y;
-                
+
                 if ($age < 18) {
                         return "Le joueur doit avoir au moins 18 ans (âge actuel : $age ans).";
                 }
-                
+
                 return "OK";
         }
 
         // Valider toutes les données d'un joueur (ajout ou modification)
-        public function valider_donnees_joueur($id, $nom, $prenom, $licence, $taille, $poids, $date_naissance = null) {
+        public function valider_donnees_joueur($id, $nom, $prenom, $licence, $taille, $poids, $date_naissance = null)
+        {
                 // Vérifier que les champs obligatoires ne sont pas vides
                 if (empty($nom) || empty($prenom)) {
                         return "Le nom et le prénom ne peuvent être vides.";
                 }
 
                 // Vérifier que la licence est un nombre positif
-                if (!is_numeric($licence) || $licence <= 0) {   return "La licence doit être un nombre entier positif.";}
+                if (!is_numeric($licence) || $licence <= 0) {
+                        return "La licence doit être un nombre entier positif.";
+                }
 
                 // Vérifier les valeurs minimales de taille et poids
-                if (!is_numeric($taille) || $taille < 80) {     return "La taille doit être d'au moins 80 cm.";}
-                if (!is_numeric($poids) || $poids < 20) {               return "Le poids doit être d'au moins 20 kg.";}
+                if (!is_numeric($taille) || $taille < 80) {
+                        return "La taille doit être d'au moins 80 cm.";
+                }
+                if (!is_numeric($poids) || $poids < 20) {
+                        return "Le poids doit être d'au moins 20 kg.";
+                }
 
                 // Vérifier l'âge si la date de naissance est fournie
                 if ($date_naissance !== null) {
@@ -75,11 +86,15 @@ class ControleurJoueur {
 
                 // Vérifier le format du nom
                 $res_nom = $this->verifier_format_texte($nom);
-                if ($res_nom !== "OK") {                                return "Format NOM incorrect : " . $res_nom;}
-                
+                if ($res_nom !== "OK") {
+                        return "Format NOM incorrect : " . $res_nom;
+                }
+
                 // Vérifier le format du prénom
                 $res_pre = $this->verifier_format_texte($prenom);
-                if ($res_pre !== "OK") {                                return "Format PRÉNOM incorrect : " . $res_pre;}
+                if ($res_pre !== "OK") {
+                        return "Format PRÉNOM incorrect : " . $res_pre;
+                }
 
                 // Vérifier qu'il n'existe pas déjà un joueur avec ce nom/prénom
                 $doublon = Joueur::trouver_par_nom_prenom($nom, $prenom, $id);
@@ -98,23 +113,25 @@ class ControleurJoueur {
         }
 
         // Afficher la liste des joueurs actifs
-        public function lister() {
+        public function lister()
+        {
                 // Vérifier si un joueur est en cours d'édition
                 if (isset($_GET['id_edition'])) {
-                        $id_edition = (int)$_GET['id_edition'];
+                        $id_edition = (int) $_GET['id_edition'];
                 } else {
                         $id_edition = 0;
                 }
-                
+
                 // Récupérer tous les joueurs actifs
                 $liste_joueurs = Joueur::recuperer_actifs();
-                
+
                 // Afficher la vue
                 require_once '../Vues/PageListeJoueurs.php';
         }
 
         // Ajouter un nouveau joueur
-        public function ajouter() {
+        public function ajouter()
+        {
                 $nom = $_POST['nom'];
                 $prenom = $_POST['prenom'];
                 $licence = $_POST['licence'];
@@ -134,7 +151,7 @@ class ControleurJoueur {
 
                 // Vérifier si un joueur avec cette licence existe déjà (restauration possible)
                 $joueur_existant = Joueur::trouver_par_licence($licence);
-                
+
                 // Créer un objet Joueur avec les données du formulaire
                 $nouveau_joueur = new Joueur();
                 $nouveau_joueur->set_numero_licence($licence);
@@ -158,10 +175,11 @@ class ControleurJoueur {
         }
 
         // Supprimer un joueur (changement de statut)
-        public function supprimer() {
+        public function supprimer()
+        {
                 // Vérifier que l'ID est bien envoyé
                 if (isset($_POST['id'])) {
-                        Joueur::supprimer((int)$_POST['id']);
+                        Joueur::supprimer((int) $_POST['id']);
                 }
                 header('Location: ControleurJoueur.php');
                 exit();
@@ -183,16 +201,16 @@ switch ($action) {
         case "valider_ajout":
                 $gestionnaire->ajouter();
                 break;
-                
+
         case "supprimer":
                 $gestionnaire->supprimer();
                 break;
-                
+
         case "enregistrer_modif":
                 // Vérifier que l'ID est bien envoyé
                 if (isset($_POST['id'])) {
-                        $id = (int)$_POST['id'];
-                        
+                        $id = (int) $_POST['id'];
+
                         // Valider les données
                         $erreur = $gestionnaire->valider_donnees_joueur(
                                 $id,
@@ -203,7 +221,7 @@ switch ($action) {
                                 $_POST['poids'],
                                 $_POST['date_naissance']
                         );
-                        
+
                         if ($erreur !== "OK") {
                                 $_SESSION['erreur'] = $erreur;
                                 header("Location: ControleurJoueur.php?id_edition=$id");
@@ -217,7 +235,7 @@ switch ($action) {
                                 $joueur_modifie->set_taille($_POST['taille']);
                                 $joueur_modifie->set_poids($_POST['poids']);
                                 $joueur_modifie->set_statut($_POST['statut']);
-                                
+
                                 // Enregistrer les modifications
                                 Joueur::modifier($id, $joueur_modifie);
                                 header('Location: ControleurJoueur.php');
@@ -225,7 +243,7 @@ switch ($action) {
                         exit();
                 }
                 break;
-                
+
         default:
                 $gestionnaire->lister();
                 break;
