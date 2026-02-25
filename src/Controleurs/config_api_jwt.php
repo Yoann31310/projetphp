@@ -1,6 +1,67 @@
 <?php
 
-function generate_jwt($headers, $payload, $secret) {
+// API authentification
+define('urlApiAuthentification', 'http://localhost/projetR401/auth_api/authapi.php');
+define('signatureJWT', 'random');
+
+// Fonction d'appel api 
+function appel_api($methode, $url, $donnees = null)
+{
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $methode);
+
+	if ($donnees) {
+		$json_data = json_encode($donnees);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, [
+			'Content-Type: application/json',
+			'Content-Length: ' . strlen($json_data)
+		]);
+	}
+
+	$reponse = curl_exec($ch);
+	curl_close($ch);
+	return json_decode($reponse, true); //
+}
+
+// Vérifier que le token est encore valide
+function verifier_authentification()
+{
+	if (!isset($_SESSION['jwt'])) {
+		header('Location: ../Vues/PageConnexion.php');
+		exit();
+	}
+
+	// On vérifie si le jeton est toujours valide (signature + expiration)
+	if (!is_jwt_valid($_SESSION['jwt'], signatureJWT)) { //
+		session_destroy();
+		header('Location: ../Vues/PageConnexion.php');
+		exit();
+	}
+	return true;
+}
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<?php
+
+function generate_jwt($headers, $payload, $secret)
+{
 	$headers_encoded = base64url_encode(json_encode($headers));
 
 	$payload_encoded = base64url_encode(json_encode($payload));
@@ -13,7 +74,8 @@ function generate_jwt($headers, $payload, $secret) {
 	return $jwt;
 }
 
-function is_jwt_valid($jwt, $secret) {
+function is_jwt_valid($jwt, $secret)
+{
 	// split the jwt
 	$tokenParts = explode('.', $jwt);
 	//print_r($tokenParts);
@@ -41,11 +103,13 @@ function is_jwt_valid($jwt, $secret) {
 	}
 }
 
-function base64url_encode($data) {
-    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+function base64url_encode($data)
+{
+	return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
-function get_authorization_header(){
+function get_authorization_header()
+{
 	$headers = null;
 
 	if (isset($_SERVER['Authorization'])) {
@@ -65,19 +129,20 @@ function get_authorization_header(){
 	return $headers;
 }
 
-function get_bearer_token() {
-    $headers = get_authorization_header();
-    
-    // HEADER: Get the access token from the header
-    if (!empty($headers)) {
-        if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
-            if($matches[1]=='null') //$matches[1] est de type string et peut contenir 'null'
-                return null;
-            else
-                return $matches[1];
-        }
-    }
-    return null;
+function get_bearer_token()
+{
+	$headers = get_authorization_header();
+
+	// HEADER: Get the access token from the header
+	if (!empty($headers)) {
+		if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
+			if ($matches[1] == 'null') //$matches[1] est de type string et peut contenir 'null'
+				return null;
+			else
+				return $matches[1];
+		}
+	}
+	return null;
 }
 
 ?>
