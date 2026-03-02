@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-require_once '../Modeles/Classes/Entraineur.php';
 require_once 'config_api_jwt.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
