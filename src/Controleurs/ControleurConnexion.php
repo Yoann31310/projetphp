@@ -38,7 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 	} else {
 		// Erreur : on utilise le message renvoyé par l'API
-		$_SESSION['erreur'] = $resultat['status_message'] ?? "Erreur de connexion à l'API";
+		if (isset($resultat['status_message'])) {
+			$_SESSION['erreur'] = $resultat['status_message'];
+		} else {
+			$_SESSION['erreur'] = "Erreur de connexion à l'API";
+		}
 		header('Location: ../Vues/PageConnexion.php');
 		exit();
 	}

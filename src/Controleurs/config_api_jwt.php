@@ -1,7 +1,8 @@
 <?php
 
 // API authentification
-define('urlApiAuthentification', 'http://localhost/projetR401/auth_api/authapi.php');
+// define('urlApiAuthentification', 'http://localhost/projetR401/auth_api/authapi.php');
+define('urlApiAuthentification', 'https://alfred.alwaysdata.net/authapi.php');
 define('signatureJWT', 'random');
 
 // Fonction d'appel api 
