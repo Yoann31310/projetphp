@@ -60,7 +60,7 @@ class Joueur {
 	public function set_poids($poids) {     		$this->poids = $poids;}
 	public function set_statut($statut) {           $this->statut = $statut;}
 
-	// -------- APPELS à l'api ---------
+	// -------- Appels à l'api ---------
 
 	public static function recuperer_actifs() {
 		$reponse = appel_api('GET', urlApiGestionJoueur);
