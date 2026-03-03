@@ -1,49 +1,69 @@
 <?php
-
-// API authentification
-// define('urlApiAuthentification', 'http://localhost/projetR401/auth_api/authapi.php');
 define('urlApiAuthentification', 'https://alfred.alwaysdata.net/authapi.php');
-define('urlApiGestion', 'https://alphonse.alwaysdata.net/apiGestion.php');
+define('urlApiGestionJoueur', 'https://alphonse.alwaysdata.net/apiGestionJoueur.php');
+// define('urlApiGestionMatch', 'http://localhost/projetR401/projetphpgestionjoueurs-matchs/apiGestionMatch.php');
+// define('urlApiGestionStats', 'http://localhost/projetR401/projetphpgestionjoueurs-matchs/apiGestionStats.php');
 define('signatureJWT', 'random');
 
-// Fonction d'appel api 
+// Fonction d'appel api
 function appel_api($methode, $url, $donnees = null)
 {
+	// On initie la connexion avec l'URL en utilisant cURL
 	$ch = curl_init($url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $methode);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);    	 	// On veut récupérer le retour, pas juste l'afficher
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $methode); 		// On définit la méthode
 
+	$headers = []; // Tableau contenant l'entête HTTP de notre requête
+	
+	// Si un jeton est présent en session (utilisateur connecté), on le rajoute dans l'entête pour dire à l'API qu'on est bien connecté
+	if (isset($_SESSION['jwt'])) {
+		$headers[] = 'Authorization: Bearer ' . $_SESSION['jwt'];
+	}
+
+	// Si on doit envoyer des données à l'API
 	if ($donnees) {
 		$json_data = json_encode($donnees);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, [
-			'Content-Type: application/json',
-			'Content-Length: ' . strlen($json_data)
-		]);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data); // On injecte le JSON dans la requête
+		
+		// On prévient l'API qu'on lui envoi du JSON
+		$headers[] = 'Content-Type: application/json';
+		$headers[] = 'Content-Length: ' . strlen($json_data);
 	}
 
+	// On applique l'entête complet à notre requête
+	if (!empty($headers)) {
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	}
+
+	// On lance la requête et on récupère la réponse de l'API
 	$reponse = curl_exec($ch);
 	curl_close($ch);
-	return json_decode($reponse, true); //
+
+	// On convertit le JSON de l'API en tableau PHP
+	return json_decode($reponse, true);
 }
 
-// Vérifier que le token est encore valide
 function verifier_authentification()
 {
+	// Vérifie si un jeton existe dans la session actuelle
 	if (!isset($_SESSION['jwt'])) {
 		header('Location: ../Vues/PageConnexion.php');
-		exit();
+		exit(); 
 	}
 
-	// On vérifie si le jeton est toujours valide (signature + expiration)
-	if (!is_jwt_valid($_SESSION['jwt'], signatureJWT)) { //
-		session_destroy();
+	// Vérifie si le jeton est authentique et encore valide au niveau du temps
+	if (!is_jwt_valid($_SESSION['jwt'], signatureJWT)) {
+		session_destroy(); 
 		header('Location: ../Vues/PageConnexion.php');
 		exit();
 	}
 	return true;
 }
+
 ?>
+
+
+
 
 
 

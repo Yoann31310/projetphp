@@ -8,13 +8,12 @@ if (!verifier_authentification()) {
         exit();
 }
 
-require_once '../Modeles/Classes/Joueur.php';
+require_once __DIR__ . '/../Modeles/Classes/Joueur.php';
 
 class ControleurJoueur
 {
-        // Vérifier le format du nom ou prénom (lettres avec accents, minimum 3 caractères)
-        private function verifier_format_texte($chaine)
-        {
+        // Vérifier le format du nom ou prénom (lettres avec accents, >=3 caractères)
+        private function verifier_format_texte($chaine) {
                 // Mesurer la longueur de la chaîne en UTF-8 pour gérer les accents
                 $longueur = mb_strlen($chaine, 'UTF-8');
 
@@ -37,84 +36,49 @@ class ControleurJoueur
         }
 
         // Vérifier que le joueur a au moins 18 ans
-        private function verifier_age_minimum($date_naissance)
-        {
+        private function verifier_age_minimum($date_naissance) {
                 $date_obj = DateTime::createFromFormat('Y-m-d', $date_naissance);
 
-                if (!$date_obj) {
-                        return "Format de date invalide.";
-                }
+                if (!$date_obj) return "Format de date invalide.";
 
                 $aujourdhui = new DateTime();
                 $age = $aujourdhui->diff($date_obj)->y;
 
-                if ($age < 18) {
-                        return "Le joueur doit avoir au moins 18 ans (âge actuel : $age ans).";
-                }
-
+                if ($age < 18) return "Le joueur doit avoir au moins 18 ans (âge actuel : $age ans).";
                 return "OK";
         }
 
         // Valider toutes les données d'un joueur (ajout ou modification)
-        public function valider_donnees_joueur($id, $nom, $prenom, $licence, $taille, $poids, $date_naissance = null)
-        {
+        public function valider_donnees_joueur($id, $nom, $prenom, $licence, $taille, $poids, $date_naissance = null) {
                 // Vérifier que les champs obligatoires ne sont pas vides
-                if (empty($nom) || empty($prenom)) {
-                        return "Le nom et le prénom ne peuvent être vides.";
-                }
+                if (empty($nom) || empty($prenom)) return "Le nom et le prénom ne peuvent être vides.";
 
                 // Vérifier que la licence est un nombre positif
-                if (!is_numeric($licence) || $licence <= 0) {
-                        return "La licence doit être un nombre entier positif.";
-                }
+                if (!is_numeric($licence) || $licence <= 0) return "La licence doit être un nombre entier positif.";
 
                 // Vérifier les valeurs minimales de taille et poids
-                if (!is_numeric($taille) || $taille < 80) {
-                        return "La taille doit être d'au moins 80 cm.";
-                }
-                if (!is_numeric($poids) || $poids < 20) {
-                        return "Le poids doit être d'au moins 20 kg.";
-                }
+                if (!is_numeric($taille) || $taille < 80) return "La taille doit être d'au moins 80 cm.";
+                if (!is_numeric($poids) || $poids < 20) return "Le poids doit être d'au moins 20 kg.";
 
                 // Vérifier l'âge si la date de naissance est fournie
                 if ($date_naissance !== null) {
                         $res_age = $this->verifier_age_minimum($date_naissance);
-                        if ($res_age !== "OK") {
-                                return $res_age;
-                        }
+                        if ($res_age !== "OK") return $res_age;
                 }
 
                 // Vérifier le format du nom
                 $res_nom = $this->verifier_format_texte($nom);
-                if ($res_nom !== "OK") {
-                        return "Format NOM incorrect : " . $res_nom;
-                }
+                if ($res_nom !== "OK") return "Format NOM incorrect : " . $res_nom;
 
                 // Vérifier le format du prénom
                 $res_pre = $this->verifier_format_texte($prenom);
-                if ($res_pre !== "OK") {
-                        return "Format PRÉNOM incorrect : " . $res_pre;
-                }
-
-                // Vérifier qu'il n'existe pas déjà un joueur avec ce nom/prénom
-                $doublon = Joueur::trouver_par_nom_prenom($nom, $prenom, $id);
-                if ($doublon) {
-                        if ($doublon->get_numero_licence() != $licence) {
-                                return "Cette personne existe déjà (Licence : " . $doublon->get_numero_licence() . ").";
-                        }
-                }
-
-                // Vérifier que la licence n'est pas déjà attribuée à un autre joueur
-                if (Joueur::licence_existe_deja($licence, $id)) {
-                        return "Le numéro de licence $licence est déjà attribué à un autre joueur.";
-                }
+                if ($res_pre !== "OK") return "Format PRÉNOM incorrect : " . $res_pre;
 
                 return "OK";
         }
 
         // Afficher la liste des joueurs actifs
-        public function lister()
-        {
+        public function lister() {
                 // Vérifier si un joueur est en cours d'édition
                 if (isset($_GET['id_edition'])) {
                         $id_edition = (int) $_GET['id_edition'];
@@ -122,16 +86,22 @@ class ControleurJoueur
                         $id_edition = 0;
                 }
 
-                // Récupérer tous les joueurs actifs
-                $liste_joueurs = Joueur::recuperer_actifs();
+                // $liste_joueurs = Joueur::recuperer_actifs();
+
+                $reponse = appel_api('GET', urlApiGestionJoueur);
+                $liste_joueurs = [];
+                if (isset($reponse['data'])) {
+                    foreach ($reponse['data'] as $j) {
+                        $liste_joueurs[] = new Joueur($j);
+                    }
+                }
 
                 // Afficher la vue
                 require_once '../Vues/PageListeJoueurs.php';
         }
 
         // Ajouter un nouveau joueur
-        public function ajouter()
-        {
+        public function ajouter() {
                 $nom = $_POST['nom'];
                 $prenom = $_POST['prenom'];
                 $licence = $_POST['licence'];
@@ -149,10 +119,8 @@ class ControleurJoueur
                         exit();
                 }
 
-                // Vérifier si un joueur avec cette licence existe déjà (restauration possible)
+                /*
                 $joueur_existant = Joueur::trouver_par_licence($licence);
-
-                // Créer un objet Joueur avec les données du formulaire
                 $nouveau_joueur = new Joueur();
                 $nouveau_joueur->set_numero_licence($licence);
                 $nouveau_joueur->set_nom($nom);
@@ -163,11 +131,29 @@ class ControleurJoueur
                 $nouveau_joueur->set_statut($statut);
 
                 if ($joueur_existant) {
-                        // Si le joueur existe déjà, on le restaure en modifiant ses données
                         Joueur::modifier($joueur_existant->get_id_joueurs(), $nouveau_joueur);
                 } else {
-                        // Sinon, on l'ajoute
                         Joueur::ajouter($nouveau_joueur);
+                }
+                */
+
+                $donnees = [
+                    'numero_licence' => $licence,
+                    'nom' => $nom,
+                    'prenom' => $prenom,
+                    'date_naissance' => $date_n,
+                    'taille' => $taille,
+                    'poids' => $poids,
+                    'statut' => $statut
+                ];
+
+                $reponse = appel_api('POST', urlApiGestionJoueur, $donnees);
+                
+                // Si l'API renvoie une erreur, on l'affiche au client
+                if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
+                        $_SESSION['erreur'] = $reponse['status_message'] ?? "Erreur inconnue de l'API.";
+                        header('Location: ControleurJoueur.php');
+                        exit();
                 }
 
                 header('Location: ControleurJoueur.php');
@@ -179,7 +165,10 @@ class ControleurJoueur
         {
                 // Vérifier que l'ID est bien envoyé
                 if (isset($_POST['id'])) {
-                        Joueur::supprimer((int) $_POST['id']);
+                        // Joueur::supprimer((int) $_POST['id']);
+
+                        $id = (int) $_POST['id'];
+                        appel_api('DELETE', urlApiGestionJoueur . "?id=" . $id);
                 }
                 header('Location: ControleurJoueur.php');
                 exit();
@@ -226,7 +215,7 @@ switch ($action) {
                                 $_SESSION['erreur'] = $erreur;
                                 header("Location: ControleurJoueur.php?id_edition=$id");
                         } else {
-                                // Créer un objet Joueur avec les données modifiées
+                                /*
                                 $joueur_modifie = new Joueur();
                                 $joueur_modifie->set_numero_licence($_POST['licence']);
                                 $joueur_modifie->set_nom($_POST['nom']);
@@ -236,9 +225,28 @@ switch ($action) {
                                 $joueur_modifie->set_poids($_POST['poids']);
                                 $joueur_modifie->set_statut($_POST['statut']);
 
-                                // Enregistrer les modifications
                                 Joueur::modifier($id, $joueur_modifie);
-                                header('Location: ControleurJoueur.php');
+                                */
+
+                                $donnees = [
+                                    'numero_licence' => $_POST['licence'],
+                                    'nom' => $_POST['nom'],
+                                    'prenom' => $_POST['prenom'],
+                                    'date_naissance' => $_POST['date_naissance'],
+                                    'taille' => $_POST['taille'],
+                                    'poids' => $_POST['poids'],
+                                    'statut' => $_POST['statut']
+                                ];
+
+                                $reponse = appel_api('PUT', urlApiGestionJoueur . "?id=" . $id, $donnees);
+                                
+                                // Si l'API renvoie une erreur on la transmet à l'utilisateur
+                                if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
+                                        $_SESSION['erreur'] = $reponse['status_message'] ?? "Erreur inconnue de l'API.";
+                                        header("Location: ControleurJoueur.php?id_edition=$id");
+                                } else {
+                                        header('Location: ControleurJoueur.php');
+                                }
                         }
                         exit();
                 }

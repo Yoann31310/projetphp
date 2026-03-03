@@ -1,15 +1,41 @@
 <?php
-require_once __DIR__ . '/../DAO/JoueurDAO.php';
 
 class Joueur {
-	private $id_joueurs;
-	private $numero_licence;
-	private $nom;
-	private $prenom;
-	private $date_naissance;
-	private $taille;
-	private $poids;
-	private $statut;
+	public $id_joueurs;
+	public $numero_licence;
+	public $nom;
+	public $prenom;
+	public $date_naissance;
+	public $taille;
+	public $poids;
+	public $statut;
+
+	public function __construct($data = null) {
+		if ($data !== null) {
+			if (isset($data['Id_Joueurs'])) {
+				$this->id_joueurs = $data['Id_Joueurs'];
+			} else {
+				if (isset($data['id_joueurs'])) {
+					$this->id_joueurs = $data['id_joueurs'];
+				}
+			}
+
+			if (isset($data['Numero_licence'])) {
+				$this->numero_licence = $data['Numero_licence'];
+			} else {
+				if (isset($data['numero_licence'])) {
+					$this->numero_licence = $data['numero_licence'];
+				}
+			}
+
+			if (isset($data['nom'])) 									$this->nom = $data['nom'];
+			if (isset($data['prenom'])) 								$this->prenom = $data['prenom'];
+			if (isset($data['date_naissance'])) 						$this->date_naissance = $data['date_naissance'];
+			if (isset($data['taille'])) 								$this->taille = $data['taille'];
+			if (isset($data['poids'])) 									$this->poids = $data['poids'];
+			if (isset($data['statut'])) 								$this->statut = $data['statut'];
+		}
+	}
 
 	// ========== GETTERS ==========
 	
@@ -22,12 +48,8 @@ class Joueur {
 	public function get_poids() {       		    return $this->poids;}
 	public function get_statut() {      		    return $this->statut;}
 
-	// Vérifier si le joueur est actif (non supprimé)
 	public function est_actif() {       		    return $this->statut !== 'Supprimé';}
-
-	// Obtenir le nom complet du joueur (NOM en majuscules + prénom)
 	public function get_nom_complet() { 		    return strtoupper($this->nom) . " " . $this->prenom;}
-
 
 	public function set_id_joueurs($id) {	    	$this->id_joueurs = $id;}
 	public function set_numero_licence($num) {		$this->numero_licence = $num;}
@@ -38,48 +60,73 @@ class Joueur {
 	public function set_poids($poids) {     		$this->poids = $poids;}
 	public function set_statut($statut) {           $this->statut = $statut;}
 
+	// -------- APPELS à l'api ---------
 
-	// Calculer l'âge du joueur à partir de sa date de naissance
-	public function calculer_age() {
-		if ($this->date_naissance) {
-			$date_nais = new DateTime($this->date_naissance);
-			$maintenant = new DateTime();
-			// Différence en années entre les deux dates
-			return $maintenant->diff($date_nais)->y;
+	public static function recuperer_actifs() {
+		$reponse = appel_api('GET', urlApiGestionJoueur);
+		$joueurs = [];
+		if (isset($reponse['data'])) {
+			foreach ($reponse['data'] as $donnees) {
+				$joueurs[] = new Joueur($donnees);
+			}
+		}
+		return $joueurs;
+	}
+
+	public static function trouver_par_id($id) {
+		$reponse = appel_api('GET', urlApiGestionJoueur . "?id=" . $id);
+		if (isset($reponse['data'])) {
+			return new Joueur($reponse['data']);
 		}
 		return null;
 	}
 
-	// Récupérer uniquement les joueurs actifs
-	public static function recuperer_actifs() {		        return JoueurDAO::recuperer_actifs();}
 
-	// Récupérer tous les joueurs (même supprimés)
-	public static function recuperer_tout() {		        return JoueurDAO::recuperer_tout();}
-
-	// Trouver un joueur par son identifiant
-	public static function trouver_par_id($id) {	        return JoueurDAO::trouver_par_id($id);}
-
-	// Trouver un joueur par son numéro de licence
-	public static function trouver_par_licence($licence) {
-		return JoueurDAO::trouver_par_licence($licence);
+	public static function ajouter(Joueur $joueur) {
+		$donnees = [
+			'numero_licence' => $joueur->get_numero_licence(),
+			'nom' => $joueur->get_nom(),
+			'prenom' => $joueur->get_prenom(),
+			'date_naissance' => $joueur->get_date_naissance(),
+			'taille' => $joueur->get_taille(),
+			'poids' => $joueur->get_poids(),
+			'statut' => $joueur->get_statut()
+		];
+		$reponse = appel_api('POST', urlApiGestionJoueur, $donnees);
+		if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 201 || $reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+		return false;
 	}
 
-	// Trouver un joueur par nom et prénom
-	public static function trouver_par_nom_prenom($nom, $prenom, $id_exclusion = 0) {
-		return JoueurDAO::trouver_par_nom_prenom($nom, $prenom, $id_exclusion);
+	public static function modifier($id, Joueur $joueur) {
+		$donnees = [
+			'numero_licence' => $joueur->get_numero_licence(),
+			'nom' => $joueur->get_nom(),
+			'prenom' => $joueur->get_prenom(),
+			'date_naissance' => $joueur->get_date_naissance(),
+			'taille' => $joueur->get_taille(),
+			'poids' => $joueur->get_poids(),
+			'statut' => $joueur->get_statut()
+		];
+		$reponse = appel_api('PUT', urlApiGestionJoueur . "?id=" . $id, $donnees);
+		if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+		return false;
 	}
 
-	// Vérifier si une licence existe déjà
-	public static function licence_existe_deja($licence, $id_exclusion = 0) {
-		return JoueurDAO::licence_existe_deja($licence, $id_exclusion);
+	public static function supprimer($id) {
+		$reponse = appel_api('DELETE', urlApiGestionJoueur . "?id=" . $id);
+		if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+		return false;
 	}
-
-	// Ajouter un nouveau joueur
-	public static function ajouter(Joueur $joueur) {		return JoueurDAO::ajouter($joueur);	}
-
-	// Modifier un joueur existant
-	public static function modifier($id, Joueur $joueur) {	return JoueurDAO::modifier($id, $joueur);}
-
-	// Supprimer un joueur (soft delete : changement de statut)
-	public static function supprimer($id) {         		return JoueurDAO::supprimer($id);}
 }
