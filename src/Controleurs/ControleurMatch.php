@@ -111,8 +111,12 @@ class ControleurMatch
 		$nouveau_match->set_lieu($_POST['lieu']);
 		$nouveau_match->set_adresse($_POST['adresse']);
 
-		// Enregistrer le match
-		Matchs::ajouter($nouveau_match);
+		// Enregistrer le match et vérifier le succès via l'API
+		if (Matchs::ajouter($nouveau_match)) {
+            $_SESSION['message'] = "Le match contre " . $_POST['adversaire'] . " a été ajouté.";
+        } else {
+            $_SESSION['erreur'] = "Échec de l'ajout du match via l'API (problème serveur ou base de données).";
+        }
 
 		header('Location: ControleurMatch.php');
 		exit();
@@ -135,11 +139,11 @@ class ControleurMatch
 
 		$date_heure = $date . " " . $heure;
 
-		// Récupérer le résultat si disponible, sinon NULL
+		// récupération du résultat si disponible dans le formulaire
 		if (isset($_POST['resultat'])) {
-			$res = $_POST['resultat'];
+			$resultat_match = $_POST['resultat'];
 		} else {
-			$res = NULL;
+			$resultat_match = NULL;
 		}
 
 		// Créer un objet Match
@@ -148,10 +152,14 @@ class ControleurMatch
 		$match_modifie->set_nom_equipe_adverse($_POST['adversaire']);
 		$match_modifie->set_lieu($_POST['lieu']);
 		$match_modifie->set_adresse($_POST['adresse']);
-		$match_modifie->set_resultat($res);
+		$match_modifie->set_resultat($resultat_match);
 
 		// Enregistrer les modifications
-		Matchs::modifier($id, $match_modifie);
+		if (Matchs::modifier($id, $match_modifie)) {
+            $_SESSION['message'] = "Les modifications ont été enregistrées.";
+        } else {
+            $_SESSION['erreur'] = "Impossible de modifier le match via l'API.";
+        }
 
 		header("Location: ControleurMatch.php?action=details&id=$id");
 		exit();
@@ -165,7 +173,7 @@ class ControleurMatch
 
 		$liste_finale = array();
 
-		// Filtrer les joueurs qui participent (exclure les "non_partant")
+		// Filtrer les joueurs qui participent
 		foreach ($tous_les_ids as $id_j) {
 			$role_choisi = $_POST['role_' . $id_j];
 
@@ -187,16 +195,21 @@ class ControleurMatch
 		}
 
 		// Vider l'ancienne feuille et enregistrer la nouvelle
-		Participation::vider_feuille($id_match);
-
-		foreach ($liste_finale as $joueur) {
-			Participation::ajouter_participant(
-				$id_match,
-				$joueur['id_joueur'],
-				$joueur['role'],
-				$joueur['poste']
-			);
-		}
+		if (Participation::vider_feuille($id_match)) {
+            $succes_global = true;
+            foreach ($liste_finale as $joueur) {
+                if (!Participation::ajouter_participant($id_match, $joueur['id_joueur'], $joueur['role'], $joueur['poste'])) {
+                    $succes_global = false;
+                }
+            }
+            if ($succes_global) {
+                $_SESSION['message'] = "La feuille de match a été mise à jour.";
+            } else {
+                $_SESSION['erreur'] = "La feuille de match a été vidée mais certains joueurs n'ont pas pu être ajoutés.";
+            }
+        } else {
+            $_SESSION['erreur'] = "Impossible de vider l'ancienne feuille de match via l'API.";
+        }
 
 		header("Location: ControleurMatch.php");
 		exit();
@@ -207,10 +220,12 @@ class ControleurMatch
 	{
 		$id = (int) $_POST['id'];
 
-		// Supprimer d'abord toutes les participations liées pour éviter erreurs dans BD
-		Participation::vider_feuille($id);
-
-		Matchs::supprimer($id);
+		// Supprimer d'abord toutes les participations et le match
+		if (Matchs::supprimer($id)) {
+            $_SESSION['message'] = "Le match a bien été supprimé.";
+        } else {
+            $_SESSION['erreur'] = "Erreur lors de la suppression du match via l'API.";
+        }
 		header('Location: ControleurMatch.php');
 		exit();
 	}

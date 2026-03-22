@@ -151,7 +151,11 @@ class ControleurJoueur
                 
                 // Si l'API renvoie une erreur, on l'affiche au client
                 if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
-                        $_SESSION['erreur'] = $reponse['status_message'] ?? "Erreur inconnue de l'API.";
+                        if (isset($reponse['status_message'])) {
+                                $_SESSION['erreur'] = $reponse['status_message'];
+                        } else {
+                                $_SESSION['erreur'] = "Erreur inconnue de l'API.";
+                        }
                         header('Location: ControleurJoueur.php');
                         exit();
                 }
@@ -242,7 +246,11 @@ switch ($action) {
                                 
                                 // Si l'API renvoie une erreur on la transmet à l'utilisateur
                                 if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
-                                        $_SESSION['erreur'] = $reponse['status_message'] ?? "Erreur inconnue de l'API.";
+                                        if (isset($reponse['status_message'])) {
+                                                $_SESSION['erreur'] = $reponse['status_message'];
+                                        } else {
+                                                $_SESSION['erreur'] = "Erreur inconnue de l'API.";
+                                        }
                                         header("Location: ControleurJoueur.php?id_edition=$id");
                                 } else {
                                         header('Location: ControleurJoueur.php');

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../DAO/MatchDAO.php';
+require_once __DIR__ . '/../../Controleurs/config_api_jwt.php';
 
 class Matchs {
 	private $id_matchs;
@@ -10,7 +10,55 @@ class Matchs {
 	private $resultat;
 
 	
+    public function __construct($donnees = null) {
+        if ($donnees !== null) {
+            // Gestion de l'identifiant du match
+            if (isset($donnees['Id_Matchs'])) {
+                $this->id_matchs = $donnees['Id_Matchs'];
+            } else if (isset($donnees['id_matchs'])) {
+                $this->id_matchs = $donnees['id_matchs'];
+            } else {
+                $this->id_matchs = null;
+            }
 
+            // Gestion de la date et l'heure (//TODO : Se mettre sur la bonne écriture)
+            if (isset($donnees['Date_heure'])) {
+                $this->date_heure = $donnees['Date_heure'];
+            } else if (isset($donnees['date_heure'])) {
+                $this->date_heure = $donnees['date_heure'];
+            } else {
+                $this->date_heure = null;
+            }
+
+            // Gestion de l'équipe adverse
+            if (isset($donnees['nom_equipe_adverse'])) {
+                $this->nom_equipe_adverse = $donnees['nom_equipe_adverse'];
+            } else {
+                $this->nom_equipe_adverse = null;
+            }
+
+            // Gestion du lieu
+            if (isset($donnees['lieu'])) {
+                $this->lieu = $donnees['lieu'];
+            } else {
+                $this->lieu = null;
+            }
+
+            // Gestion de l'adresse
+            if (isset($donnees['adresse'])) {
+                $this->adresse = $donnees['adresse'];
+            } else {
+                $this->adresse = null;
+            }
+
+            // Gestion du résultat du match
+            if (isset($donnees['resultat'])) {
+                $this->resultat = $donnees['resultat'];
+            } else {
+                $this->resultat = null;
+            }
+        }
+    }
 
     public function get_id_matchs() {               return $this->id_matchs; }
     public function get_date_heure() {              return $this->date_heure; }
@@ -47,14 +95,82 @@ class Matchs {
 		return strtolower($this->resultat) === 'gagnée';
 	}
     
-    // Récupérer tous les matchs
-    public static function recuperer_tout() {               return MatchDAO::recuperer_tout();}
 
-    public static function trouver_par_id($id) {            return MatchDAO::trouver_par_id($id);}
 
-    public static function ajouter(Matchs $match) {         return MatchDAO::ajouter($match);}
 
-    public static function modifier($id, Matchs $match) {   return MatchDAO::modifier($id, $match); }
 
-    public static function supprimer($id) {                 return MatchDAO::supprimer($id);}
+
+
+
+
+
+
+
+    // Appel API
+    public static function recuperer_tout() {
+        $reponse = appel_api('GET', urlApiGestionMatch);
+        $liste_matchs = [];
+        if (isset($reponse['data'])) {
+            if (is_array($reponse['data'])) {
+                foreach ($reponse['data'] as $donnees_match) {
+                    $liste_matchs[] = new Matchs($donnees_match);
+                }
+            }
+        }
+        return $liste_matchs;
+    }
+
+    public static function trouver_par_id($identifiant) {
+        $reponse = appel_api('GET', urlApiGestionMatch . "?id=" . $identifiant);
+        if (isset($reponse['data'])) {
+            return new Matchs($reponse['data']);
+        }
+        return null;
+    }
+
+    public static function ajouter(Matchs $un_match) {
+        $donnees_a_envoyer = [
+            'date_heure' => $un_match->get_date_heure(),
+            'nom_equipe_adverse' => $un_match->get_nom_equipe_adverse(),
+            'lieu' => $un_match->get_lieu(),
+            'adresse' => $un_match->get_adresse()
+        ];
+        $reponse = appel_api('POST', urlApiGestionMatch, $donnees_a_envoyer);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 201 || $reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static function modifier($identifiant, Matchs $match_modifie) {
+        $donnees_a_envoyer = [
+            'date_heure' =>         $match_modifie->get_date_heure(),
+            'nom_equipe_adverse' => $match_modifie->get_nom_equipe_adverse(),
+            'lieu' =>               $match_modifie->get_lieu(),
+            'adresse' =>            $match_modifie->get_adresse(),
+            'resultat' =>           $match_modifie->get_resultat()
+        ];
+        $reponse = appel_api('PUT', urlApiGestionMatch . "?id=" . $identifiant, $donnees_a_envoyer);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static function supprimer($identifiant) {
+        $reponse = appel_api('DELETE', urlApiGestionMatch . "?id=" . $identifiant);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
