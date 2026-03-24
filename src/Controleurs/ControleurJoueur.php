@@ -86,15 +86,7 @@ class ControleurJoueur
                         $id_edition = 0;
                 }
 
-                // $liste_joueurs = Joueur::recuperer_actifs();
-
-                $reponse = appel_api('GET', urlApiGestionJoueur);
-                $liste_joueurs = [];
-                if (isset($reponse['data'])) {
-                    foreach ($reponse['data'] as $j) {
-                        $liste_joueurs[] = new Joueur($j);
-                    }
-                }
+                $liste_joueurs = Joueur::recuperer_actifs();
 
                 // Afficher la vue
                 require_once '../Vues/PageListeJoueurs.php';
@@ -119,8 +111,7 @@ class ControleurJoueur
                         exit();
                 }
 
-                /*
-                $joueur_existant = Joueur::trouver_par_licence($licence);
+                // Création de l'objet Joueur
                 $nouveau_joueur = new Joueur();
                 $nouveau_joueur->set_numero_licence($licence);
                 $nouveau_joueur->set_nom($nom);
@@ -130,37 +121,12 @@ class ControleurJoueur
                 $nouveau_joueur->set_poids($poids);
                 $nouveau_joueur->set_statut($statut);
 
-                if ($joueur_existant) {
-                        Joueur::modifier($joueur_existant->get_id_joueurs(), $nouveau_joueur);
-                } else {
-                        Joueur::ajouter($nouveau_joueur);
-                }
-                */
-
-                $donnees = [
-                    'numero_licence' => $licence,
-                    'nom' => $nom,
-                    'prenom' => $prenom,
-                    'date_naissance' => $date_n,
-                    'taille' => $taille,
-                    'poids' => $poids,
-                    'statut' => $statut
-                ];
-
-                $reponse = appel_api('POST', urlApiGestionJoueur, $donnees);
-                
-                // Si l'API renvoie une erreur, on l'affiche au client
-                if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
-                        if (isset($reponse['status_message'])) {
-                                $_SESSION['erreur'] = $reponse['status_message'];
-                        } else {
-                                $_SESSION['erreur'] = "Erreur inconnue de l'API.";
-                        }
+                if (Joueur::ajouter($nouveau_joueur)) {
                         header('Location: ControleurJoueur.php');
-                        exit();
+                } else {
+                        $_SESSION['erreur'] = "Échec de l'ajout via l'API.";
+                        header('Location: ControleurJoueur.php');
                 }
-
-                header('Location: ControleurJoueur.php');
                 exit();
         }
 
@@ -169,10 +135,8 @@ class ControleurJoueur
         {
                 // Vérifier que l'ID est bien envoyé
                 if (isset($_POST['id'])) {
-                        // Joueur::supprimer((int) $_POST['id']);
-
                         $id = (int) $_POST['id'];
-                        appel_api('DELETE', urlApiGestionJoueur . "?id=" . $id);
+                        Joueur::supprimer($id);
                 }
                 header('Location: ControleurJoueur.php');
                 exit();
@@ -219,7 +183,7 @@ switch ($action) {
                                 $_SESSION['erreur'] = $erreur;
                                 header("Location: ControleurJoueur.php?id_edition=$id");
                         } else {
-                                /*
+                                // Création de l'objet Joueur
                                 $joueur_modifie = new Joueur();
                                 $joueur_modifie->set_numero_licence($_POST['licence']);
                                 $joueur_modifie->set_nom($_POST['nom']);
@@ -229,31 +193,11 @@ switch ($action) {
                                 $joueur_modifie->set_poids($_POST['poids']);
                                 $joueur_modifie->set_statut($_POST['statut']);
 
-                                Joueur::modifier($id, $joueur_modifie);
-                                */
-
-                                $donnees = [
-                                    'numero_licence' => $_POST['licence'],
-                                    'nom' => $_POST['nom'],
-                                    'prenom' => $_POST['prenom'],
-                                    'date_naissance' => $_POST['date_naissance'],
-                                    'taille' => $_POST['taille'],
-                                    'poids' => $_POST['poids'],
-                                    'statut' => $_POST['statut']
-                                ];
-
-                                $reponse = appel_api('PUT', urlApiGestionJoueur . "?id=" . $id, $donnees);
-                                
-                                // Si l'API renvoie une erreur on la transmet à l'utilisateur
-                                if (isset($reponse['status_code']) && !in_array($reponse['status_code'], [200, 201])) {
-                                        if (isset($reponse['status_message'])) {
-                                                $_SESSION['erreur'] = $reponse['status_message'];
-                                        } else {
-                                                $_SESSION['erreur'] = "Erreur inconnue de l'API.";
-                                        }
-                                        header("Location: ControleurJoueur.php?id_edition=$id");
-                                } else {
+                                if (Joueur::modifier($id, $joueur_modifie)) {
                                         header('Location: ControleurJoueur.php');
+                                } else {
+                                        $_SESSION['erreur'] = "Erreur lors de la modification via l'API.";
+                                        header("Location: ControleurJoueur.php?id_edition=$id");
                                 }
                         }
                         exit();
