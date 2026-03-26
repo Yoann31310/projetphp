@@ -39,8 +39,8 @@ if (!isset($_SESSION['id_entraineur'])) {
             <div class="carte-info">
                 <h3>Prochain Match</h3>
                 <?php if ($prochain_match): ?>
-                    <p>Contre : <strong><?php echo htmlspecialchars($prochain_match['nom_equipe_adverse']); ?></strong></p>
-                    <p>Date : <?php echo date('d/m/Y à H:i', strtotime($prochain_match['Date_heure'])); ?></p>
+                    <p>Contre : <strong><?php echo htmlspecialchars($prochain_match->get_nom_equipe_adverse()); ?></strong></p>
+                    <p>Date : <?php echo date('d/m/Y à H:i', strtotime($prochain_match->get_date_heure())); ?></p>
                 <?php else: ?>
                     <p>Aucun match programmé</p>
                 <?php endif; ?>
@@ -50,16 +50,16 @@ if (!isset($_SESSION['id_entraineur'])) {
                 <?php if ($dernier_resultat): ?>
                     <?php 
                         $classe_resultat = '';
-                        if ($dernier_resultat['resultat'] == 'Gagnée') {
+                        if ($dernier_resultat->get_resultat() == 'Gagnée') {
                             $classe_resultat = 'resultat-gagne';
-                        } else if ($dernier_resultat['resultat'] == 'Perdue') {
+                        } else if ($dernier_resultat->get_resultat() == 'Perdue') {
                             $classe_resultat = 'resultat-perdu';
                         } else {
                             $classe_resultat = 'resultat-nul';
                         }
                     ?>
-                    <p class="<?php echo $classe_resultat; ?>"><?php echo htmlspecialchars($dernier_resultat['resultat']); ?></p>
-                    <p><small>Contre <?php echo htmlspecialchars($dernier_resultat['nom_equipe_adverse']); ?></small></p>
+                    <p class="<?php echo $classe_resultat; ?>"><?php echo htmlspecialchars($dernier_resultat->get_resultat()); ?></p>
+                    <p><small>Contre <?php echo htmlspecialchars($dernier_resultat->get_nom_equipe_adverse()); ?></small></p>
                 <?php else: ?>
                     <p>Aucun résultat</p>
                 <?php endif; ?>

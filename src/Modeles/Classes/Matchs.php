@@ -174,42 +174,29 @@ class Matchs {
         $reponse = appel_api('GET', urlApiGestionStats);
         if (isset($reponse['data']['globales'])) {
             return $reponse['data']['globales'];
-        } else {
-            return null;
         }
+        return null;
     }
 
-    // Prochain match (calculé à partir de tous les matchs)
+    // Prochain match
     public static function obtenir_prochain_match() {
-        $liste = self::recuperer_tout();
-        $prochain = null;
-        $maintenant = time();
-        foreach ($liste as $m) {
-            $date_m = strtotime($m->get_date_heure());
-            if ($date_m > $maintenant) {
-                if ($prochain === null || $date_m < strtotime($prochain->get_date_heure())) {
-                    $prochain = $m;
-                }
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['prochain_match'])) {
+            if (is_array($reponse['data']['prochain_match'])) {
+                return new Matchs($reponse['data']['prochain_match']);
             }
         }
-        return $prochain;
+        return null;
     }
 
-    // Dernier résultat (match passé le plus récent avec un résultat)
+    // Dernier résultat
     public static function obtenir_dernier_resultat() {
-        $liste = self::recuperer_tout();
-        $dernier = null;
-        $maintenant = time();
-        foreach ($liste as $m) {
-            if ($m->get_resultat() !== null) {
-                $date_m = strtotime($m->get_date_heure());
-                if ($date_m < $maintenant) {
-                    if ($dernier === null || $date_m > strtotime($dernier->get_date_heure())) {
-                        $dernier = $m;
-                    }
-                }
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['dernier_resultat'])) {
+            if (is_array($reponse['data']['dernier_resultat'])) {
+                return new Matchs($reponse['data']['dernier_resultat']);
             }
         }
-        return $dernier;
+        return null;
     }
 }

@@ -11,6 +11,7 @@ class Joueur {
 	public $poids;
 	public $statut;
 
+
 	public function __construct($data = null) {
 		if ($data !== null) {
             if (isset($data['Id_Joueurs'])) {
@@ -188,21 +189,18 @@ class Joueur {
     }
 
     public static function compter_joueurs_actifs() {
-        $liste = self::recuperer_actifs();
-        return count($liste);
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['globales']['nb_joueurs_actifs'])) {
+            return $reponse['data']['globales']['nb_joueurs_actifs'];
+        }
+        return 0;
     }
 
     public static function calculer_age_moyen() {
-        $liste = self::recuperer_actifs();
-        if (empty($liste)) {
-            return 0;
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['globales']['age_moyen'])) {
+            return $reponse['data']['globales']['age_moyen'];
         }
-        $total_age = 0;
-        $maintenant = new DateTime();
-        foreach ($liste as $j) {
-            $date_n = new DateTime($j->get_date_naissance());
-            $total_age += $maintenant->diff($date_n)->y;
-        }
-        return round($total_age / count($liste), 1);
+        return 0;
     }
 }

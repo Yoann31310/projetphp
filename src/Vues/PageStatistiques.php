@@ -111,11 +111,11 @@
         <h2>Prochain Match</h2>
         <?php if ($prochain_match): ?>
             <div class="bloc-match">
-                <p><strong>Adversaire :</strong> <?php echo htmlspecialchars($prochain_match['nom_equipe_adverse']); ?></p>
-                <p><strong>Date :</strong> <?php echo date('d/m/Y a H:i', strtotime($prochain_match['Date_heure'])); ?></p>
-                <p><strong>Lieu :</strong> <?php echo htmlspecialchars($prochain_match['lieu']); ?></p>
-                <?php if (!empty($prochain_match['adresse'])): ?>
-                    <p><strong>Adresse :</strong> <?php echo htmlspecialchars($prochain_match['adresse']); ?></p>
+                <p><strong>Adversaire :</strong> <?php echo htmlspecialchars($prochain_match->get_nom_equipe_adverse()); ?></p>
+                <p><strong>Date :</strong> <?php echo date('d/m/Y a H:i', strtotime($prochain_match->get_date_heure())); ?></p>
+                <p><strong>Lieu :</strong> <?php echo htmlspecialchars($prochain_match->get_lieu()); ?></p>
+                <?php if ($prochain_match->get_adresse()): ?>
+                    <p><strong>Adresse :</strong> <?php echo htmlspecialchars($prochain_match->get_adresse()); ?></p>
                 <?php endif; ?>
             </div>
         <?php else: ?>
@@ -127,21 +127,21 @@
         <h2>Dernier Resultat</h2>
         <?php if ($dernier_resultat): ?>
             <div class="bloc-match">
-                <p><strong>Contre :</strong> <?php echo htmlspecialchars($dernier_resultat['nom_equipe_adverse']); ?></p>
-                <p><strong>Date :</strong> <?php echo date('d/m/Y', strtotime($dernier_resultat['Date_heure'])); ?></p>
+                <p><strong>Contre :</strong> <?php echo htmlspecialchars($dernier_resultat->get_nom_equipe_adverse()); ?></p>
+                <p><strong>Date :</strong> <?php echo date('d/m/Y', strtotime($dernier_resultat->get_date_heure())); ?></p>
                 <p><strong>Resultat :</strong> 
                     <?php 
                         $classe_resultat = '';
-                        if ($dernier_resultat['resultat'] == 'Gagnée') {
+                        if ($dernier_resultat->get_resultat() == 'Gagnée') {
                             $classe_resultat = 'victoire';
-                        } else if ($dernier_resultat['resultat'] == 'Perdue') {
+                        } else if ($dernier_resultat->get_resultat() == 'Perdue') {
                             $classe_resultat = 'defaite';
                         } else {
                             $classe_resultat = 'nul';
                         }
                     ?>
                     <span class="resultat-match <?php echo $classe_resultat; ?>">
-                        <?php echo htmlspecialchars($dernier_resultat['resultat']); ?>
+                        <?php echo htmlspecialchars($dernier_resultat->get_resultat()); ?>
                     </span>
                 </p>
             </div>

@@ -12,7 +12,6 @@ class Participation {
 
     public function __construct($data = null) {
         if ($data !== null) {
-            // Remplacement des ?? par des if/else explicites
             if (isset($data['Id_Joueurs'])) {
                 $this->id_joueurs = $data['Id_Joueurs'];
             } else {
@@ -101,9 +100,8 @@ class Participation {
         $reponse = appel_api('GET', urlApiGestionFeuilleMatch . "?id_match=" . $id_match);
         if (isset($reponse['data'])) {
             return $reponse['data'];
-        } else {
-            return array();
         }
+        return array();
     }
 
     // Enregistrer toute la feuille de match
@@ -113,16 +111,12 @@ class Participation {
             'participants' => $participants
         ];
         $reponse = appel_api('POST', urlApiGestionFeuilleMatch, $donnees);
-        
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200 || $reponse['status_code'] == 201) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     // Vider la feuille de match
@@ -132,32 +126,24 @@ class Participation {
             'participants' => array()
         ];
         $reponse = appel_api('POST', urlApiGestionFeuilleMatch, $donnees);
-        
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     // Retirer un participant via l'API
     public static function retirer_participant($id_match, $id_joueur) {
         $url = urlApiGestionFeuilleMatch . "?id_match=" . $id_match . "&id_joueur=" . $id_joueur;
         $reponse = appel_api('DELETE', $url);
-        
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     // Évaluer un joueur via l'API
@@ -168,32 +154,21 @@ class Participation {
             'commentaire' => $commentaire
         ];
         $reponse = appel_api('PUT', $url, $donnees);
-        
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     // Statistiques top participations
     public static function obtenir_top_participations($limite = 5) {
         $reponse = appel_api('GET', urlApiGestionStats);
-        
         if (isset($reponse['data']['par_joueur'])) {
-            $joueurs = $reponse['data']['par_joueur'];
-            // On extrait les meilleurs du tableau par_joueur si l'API ne donne pas directement le top
-            usort($joueurs, function($a, $b) {
-                return $b['nb_participations'] - $a['nb_participations'];
-            });
-            return array_slice($joueurs, 0, $limite);
-        } else {
-            return array();
+            return array_slice($reponse['data']['par_joueur'], 0, $limite);
         }
+        return array();
     }
 
     // Toutes les stats joueurs
@@ -201,9 +176,8 @@ class Participation {
         $reponse = appel_api('GET', urlApiGestionStats);
         if (isset($reponse['data']['par_joueur'])) {
             return $reponse['data']['par_joueur'];
-        } else {
-            return array();
         }
+        return array();
     }
 
     // Sélections consécutives pour un joueur
@@ -211,8 +185,7 @@ class Participation {
         $reponse = appel_api('GET', urlApiGestionStats . "?id_joueur=" . $id_joueur);
         if (isset($reponse['data']['selections_consecutives'])) {
             return $reponse['data']['selections_consecutives'];
-        } else {
-            return 0;
         }
+        return 0;
     }
 }
