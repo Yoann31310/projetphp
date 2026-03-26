@@ -3,8 +3,8 @@ define('urlApiAuthentification', 'https://alfred.alwaysdata.net/authapi.php');
 define('urlApiGestionJoueur', 'https://alphonse.alwaysdata.net/apiGestionJoueur.php');
 define('urlApiGestionMatch', 'https://alphonse.alwaysdata.net/apiGestionMatch.php');
 
-// define('urlApiGestionFeuilleMatch', 'https://alphonse.alwaysdata.net/apiGestionFeuilleMatch.php');
-// define('urlApiGestionStats', 'https://alphonse.alwaysdata.net/apiGestionStats.php');
+define('urlApiGestionFeuilleMatch', 'https://alphonse.alwaysdata.net/apiGestionFeuilleMatch.php');
+define('urlApiGestionStats', 'https://alphonse.alwaysdata.net/apiGestionStats.php');
 define('signatureJWT', 'random');
 
 // Fonction d'appel api

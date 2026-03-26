@@ -15,19 +15,23 @@ class Matchs {
             // Gestion de l'identifiant du match
             if (isset($donnees['Id_Matchs'])) {
                 $this->id_matchs = $donnees['Id_Matchs'];
-            } else if (isset($donnees['id_matchs'])) {
-                $this->id_matchs = $donnees['id_matchs'];
             } else {
-                $this->id_matchs = null;
+                if (isset($donnees['id_matchs'])) {
+                    $this->id_matchs = $donnees['id_matchs'];
+                } else {
+                    $this->id_matchs = null;
+                }
             }
 
-            // Gestion de la date et l'heure (//TODO : Se mettre sur la bonne écriture)
+            // Gestion de la date et l'heure
             if (isset($donnees['Date_heure'])) {
                 $this->date_heure = $donnees['Date_heure'];
-            } else if (isset($donnees['date_heure'])) {
-                $this->date_heure = $donnees['date_heure'];
             } else {
-                $this->date_heure = null;
+                if (isset($donnees['date_heure'])) {
+                    $this->date_heure = $donnees['date_heure'];
+                } else {
+                    $this->date_heure = null;
+                }
             }
 
             // Gestion de l'équipe adverse
@@ -74,14 +78,12 @@ class Matchs {
     public function set_adresse($adresse) {         $this->adresse = $adresse; }
     public function set_resultat($resultat) {       $this->resultat = $resultat; }
 
-    	// Vérifier si le match est déjà passé
+    // Vérifier si le match est déjà passé
 	public function est_passe() {
-		// Convertit la date en timestamp et compare avec maintenant
 		return strtotime($this->date_heure) < time();
 	}
 
 	public function est_a_venir() {
-        // Convertis en time
 		return strtotime($this->date_heure) >= time();
     }
 
@@ -89,24 +91,11 @@ class Matchs {
         return $this->resultat !== null; 
     }
     
-    // Vérifier si le match a été gagné
 	public function est_victoire() {
-		// Convertit le résultat en minuscules pour la comparaison
 		return strtolower($this->resultat) === 'gagnée';
 	}
     
-
-
-
-
-
-
-
-
-
-
-
-    // Appel API
+    // Appels API
     public static function recuperer_tout() {
         $reponse = appel_api('GET', urlApiGestionMatch);
         $liste_matchs = [];
@@ -140,6 +129,8 @@ class Matchs {
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 201 || $reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
         return false;
@@ -158,6 +149,8 @@ class Matchs {
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
         return false;
@@ -169,8 +162,54 @@ class Matchs {
         if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
         return false;
+    }
+
+    // Statistiques globales
+    public static function obtenir_stats_globales() {
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['globales'])) {
+            return $reponse['data']['globales'];
+        } else {
+            return null;
+        }
+    }
+
+    // Prochain match (calculé à partir de tous les matchs)
+    public static function obtenir_prochain_match() {
+        $liste = self::recuperer_tout();
+        $prochain = null;
+        $maintenant = time();
+        foreach ($liste as $m) {
+            $date_m = strtotime($m->get_date_heure());
+            if ($date_m > $maintenant) {
+                if ($prochain === null || $date_m < strtotime($prochain->get_date_heure())) {
+                    $prochain = $m;
+                }
+            }
+        }
+        return $prochain;
+    }
+
+    // Dernier résultat (match passé le plus récent avec un résultat)
+    public static function obtenir_dernier_resultat() {
+        $liste = self::recuperer_tout();
+        $dernier = null;
+        $maintenant = time();
+        foreach ($liste as $m) {
+            if ($m->get_resultat() !== null) {
+                $date_m = strtotime($m->get_date_heure());
+                if ($date_m < $maintenant) {
+                    if ($dernier === null || $date_m > strtotime($dernier->get_date_heure())) {
+                        $dernier = $m;
+                    }
+                }
+            }
+        }
+        return $dernier;
     }
 }

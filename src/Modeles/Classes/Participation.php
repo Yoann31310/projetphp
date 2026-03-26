@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../DAO/ParticipationDAO.php';
+require_once __DIR__ . '/../../Controleurs/config_api_jwt.php';
 
 class Participation {
 	private $id_joueurs;
@@ -10,6 +10,64 @@ class Participation {
 	private $est_capitaine;
 	private $commentaire;
 
+    public function __construct($data = null) {
+        if ($data !== null) {
+            // Remplacement des ?? par des if/else explicites
+            if (isset($data['Id_Joueurs'])) {
+                $this->id_joueurs = $data['Id_Joueurs'];
+            } else {
+                if (isset($data['id_joueurs'])) {
+                    $this->id_joueurs = $data['id_joueurs'];
+                } else {
+                    $this->id_joueurs = null;
+                }
+            }
+
+            if (isset($data['Id_Matchs'])) {
+                $this->id_matchs = $data['Id_Matchs'];
+            } else {
+                if (isset($data['id_matchs'])) {
+                    $this->id_matchs = $data['id_matchs'];
+                } else {
+                    $this->id_matchs = null;
+                }
+            }
+
+            if (isset($data['feuille_match'])) {
+                $this->feuille_match = $data['feuille_match'];
+            } else {
+                $this->feuille_match = null;
+            }
+
+            if (isset($data['evaluation'])) {
+                $this->evaluation = $data['evaluation'];
+            } else {
+                $this->evaluation = null;
+            }
+
+            if (isset($data['nom_poste'])) {
+                $this->nom_poste = $data['nom_poste'];
+            } else {
+                $this->nom_poste = null;
+            }
+
+            if (isset($data['est_Capitaine'])) {
+                $this->est_capitaine = $data['est_Capitaine'];
+            } else {
+                if (isset($data['est_capitaine'])) {
+                    $this->est_capitaine = $data['est_capitaine'];
+                } else {
+                    $this->est_capitaine = null;
+                }
+            }
+
+            if (isset($data['commentaire'])) {
+                $this->commentaire = $data['commentaire'];
+            } else {
+                $this->commentaire = null;
+            }
+        }
+    }
 
     public function get_id_joueurs() {              return $this->id_joueurs; }
     public function get_id_matchs() {               return $this->id_matchs; }
@@ -27,7 +85,7 @@ class Participation {
     public function set_est_capitaine($est_cap) {   $this->est_capitaine = $est_cap; }
     public function set_commentaire($comm) {        $this->commentaire = $comm; }
 
-    	// Vérifier si le joueur est titulaire pour ce match
+    // Vérifier si le joueur est titulaire pour ce match
 	public function est_titulaire() {
 		return strtolower($this->feuille_match) === 'titulaire';
 	}
@@ -38,22 +96,123 @@ class Participation {
 	}
 
 
-    // Récupérer les participants d'un match avec infos joueur
+    // Récupérer les participants d'un match avec infos joueur via l'API
     public static function recuperer_participants($id_match) {
-        return ParticipationDAO::recuperer_participants($id_match);
+        $reponse = appel_api('GET', urlApiGestionFeuilleMatch . "?id_match=" . $id_match);
+        if (isset($reponse['data'])) {
+            return $reponse['data'];
+        } else {
+            return array();
+        }
     }
 
-    public static function ajouter_participant($id_match, $id_joueur, $role, $poste) {
-        return ParticipationDAO::ajouter_participant($id_match, $id_joueur, $role, $poste);
+    // Enregistrer toute la feuille de match
+    public static function enregistrer_feuille($id_match, $participants) {
+        $donnees = [
+            'id_match' => $id_match,
+            'participants' => $participants
+        ];
+        $reponse = appel_api('POST', urlApiGestionFeuilleMatch, $donnees);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200 || $reponse['status_code'] == 201) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // Vider la feuille de match
     public static function vider_feuille($id_match) {
-        return ParticipationDAO::vider_feuille($id_match);
+        $donnees = [
+            'id_match' => $id_match,
+            'participants' => array()
+        ];
+        $reponse = appel_api('POST', urlApiGestionFeuilleMatch, $donnees);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
-    // Évaluer un joueur
+    // Retirer un participant via l'API
+    public static function retirer_participant($id_match, $id_joueur) {
+        $url = urlApiGestionFeuilleMatch . "?id_match=" . $id_match . "&id_joueur=" . $id_joueur;
+        $reponse = appel_api('DELETE', $url);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    // Évaluer un joueur via l'API
     public static function evaluer_joueur($id_match, $id_joueur, $note, $commentaire) {
-        return ParticipationDAO::evaluer_joueur($id_match, $id_joueur, $note, $commentaire);
+        $url = urlApiGestionFeuilleMatch . "?id_match=" . $id_match . "&id_joueur=" . $id_joueur;
+        $donnees = [
+            'evaluation' => $note,
+            'commentaire' => $commentaire
+        ];
+        $reponse = appel_api('PUT', $url, $donnees);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    // Statistiques top participations
+    public static function obtenir_top_participations($limite = 5) {
+        $reponse = appel_api('GET', urlApiGestionStats);
+        
+        if (isset($reponse['data']['par_joueur'])) {
+            $joueurs = $reponse['data']['par_joueur'];
+            // On extrait les meilleurs du tableau par_joueur si l'API ne donne pas directement le top
+            usort($joueurs, function($a, $b) {
+                return $b['nb_participations'] - $a['nb_participations'];
+            });
+            return array_slice($joueurs, 0, $limite);
+        } else {
+            return array();
+        }
+    }
+
+    // Toutes les stats joueurs
+    public static function obtenir_stats_joueurs() {
+        $reponse = appel_api('GET', urlApiGestionStats);
+        if (isset($reponse['data']['par_joueur'])) {
+            return $reponse['data']['par_joueur'];
+        } else {
+            return array();
+        }
+    }
+
+    // Sélections consécutives pour un joueur
+    public static function obtenir_selections_consecutives($id_joueur) {
+        $reponse = appel_api('GET', urlApiGestionStats . "?id_joueur=" . $id_joueur);
+        if (isset($reponse['data']['selections_consecutives'])) {
+            return $reponse['data']['selections_consecutives'];
+        } else {
+            return 0;
+        }
     }
 }

@@ -8,24 +8,24 @@ if (!verifier_authentification()) {
     exit();
 }
 
-require_once '../Modeles/DAO/MatchDAO.php';
-require_once '../Modeles/DAO/JoueurDAO.php';
-require_once '../Modeles/DAO/ParticipationDAO.php';
+require_once '../Modeles/Classes/Matchs.php';
+require_once '../Modeles/Classes/Joueur.php';
+require_once '../Modeles/Classes/Participation.php';
 
 class ControleurStatistiques
 {
     public function afficher()
     {
-        // Récupérer toutes les statistiques
-        $stats_matchs = MatchDAO::obtenir_stats_globales();
-        $prochain_match = MatchDAO::obtenir_prochain_match();
-        $dernier_resultat = MatchDAO::obtenir_dernier_resultat();
+        // Récupérer toutes les statistiques via les classes qui appellent l'API
+        $stats_matchs = Matchs::obtenir_stats_globales();
+        $prochain_match = Matchs::obtenir_prochain_match();
+        $dernier_resultat = Matchs::obtenir_dernier_resultat();
 
-        $nb_joueurs = JoueurDAO::compter_joueurs_actifs();
-        $age_moyen = JoueurDAO::calculer_age_moyen();
+        $nb_joueurs = Joueur::compter_joueurs_actifs();
+        $age_moyen = Joueur::calculer_age_moyen();
 
-        $top_joueurs = ParticipationDAO::obtenir_top_participations(5);
-        $stats_joueurs = ParticipationDAO::obtenir_stats_joueurs();
+        $top_joueurs = Participation::obtenir_top_participations(5);
+        $stats_joueurs = Participation::obtenir_stats_joueurs();
 
         // Afficher la vue
         require_once '../Vues/PageStatistiques.php';

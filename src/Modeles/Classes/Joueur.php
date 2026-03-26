@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../Controleurs/config_api_jwt.php';
 
 class Joueur {
 	public $id_joueurs;
@@ -12,33 +13,65 @@ class Joueur {
 
 	public function __construct($data = null) {
 		if ($data !== null) {
-			if (isset($data['Id_Joueurs'])) {
-				$this->id_joueurs = $data['Id_Joueurs'];
-			} else {
-				if (isset($data['id_joueurs'])) {
-					$this->id_joueurs = $data['id_joueurs'];
-				}
-			}
+            if (isset($data['Id_Joueurs'])) {
+                $this->id_joueurs = $data['Id_Joueurs'];
+            } else {
+                if (isset($data['id_joueurs'])) {
+                    $this->id_joueurs = $data['id_joueurs'];
+                } else {
+                    $this->id_joueurs = null;
+                }
+            }
 
-			if (isset($data['Numero_licence'])) {
-				$this->numero_licence = $data['Numero_licence'];
-			} else {
-				if (isset($data['numero_licence'])) {
-					$this->numero_licence = $data['numero_licence'];
-				}
-			}
+            if (isset($data['Numero_licence'])) {
+                $this->numero_licence = $data['Numero_licence'];
+            } else {
+                if (isset($data['numero_licence'])) {
+                    $this->numero_licence = $data['numero_licence'];
+                } else {
+                    $this->numero_licence = null;
+                }
+            }
 
-			if (isset($data['nom'])) 									$this->nom = $data['nom'];
-			if (isset($data['prenom'])) 								$this->prenom = $data['prenom'];
-			if (isset($data['date_naissance'])) 						$this->date_naissance = $data['date_naissance'];
-			if (isset($data['taille'])) 								$this->taille = $data['taille'];
-			if (isset($data['poids'])) 									$this->poids = $data['poids'];
-			if (isset($data['statut'])) 								$this->statut = $data['statut'];
+            if (isset($data['nom'])) {
+                $this->nom = $data['nom'];
+            } else {
+                $this->nom = null;
+            }
+
+            if (isset($data['prenom'])) {
+                $this->prenom = $data['prenom'];
+            } else {
+                $this->prenom = null;
+            }
+
+            if (isset($data['date_naissance'])) {
+                $this->date_naissance = $data['date_naissance'];
+            } else {
+                $this->date_naissance = null;
+            }
+
+            if (isset($data['taille'])) {
+                $this->taille = $data['taille'];
+            } else {
+                $this->taille = null;
+            }
+
+            if (isset($data['poids'])) {
+                $this->poids = $data['poids'];
+            } else {
+                $this->poids = null;
+            }
+
+            if (isset($data['statut'])) {
+                $this->statut = $data['statut'];
+            } else {
+                $this->statut = null;
+            }
 		}
 	}
 
 	// ========== GETTERS ==========
-	
 	public function get_id_joueurs() {  		    return $this->id_joueurs; }
 	public function get_numero_licence() {		    return $this->numero_licence; }
 	public function get_nom() {         		    return $this->nom;}
@@ -66,9 +99,11 @@ class Joueur {
 		$reponse = appel_api('GET', urlApiGestionJoueur);
 		$joueurs = [];
 		if (isset($reponse['data'])) {
-			foreach ($reponse['data'] as $donnees) {
-				$joueurs[] = new Joueur($donnees);
-			}
+            if (is_array($reponse['data'])) {
+                foreach ($reponse['data'] as $donnees) {
+                    $joueurs[] = new Joueur($donnees);
+                }
+            }
 		}
 		return $joueurs;
 	}
@@ -80,7 +115,6 @@ class Joueur {
 		}
 		return null;
 	}
-
 
 	public static function ajouter(Joueur $joueur) {
 		$donnees = [
@@ -96,6 +130,8 @@ class Joueur {
 		if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 201 || $reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
 		return false;
@@ -115,6 +151,8 @@ class Joueur {
 		if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
 		return false;
@@ -125,8 +163,46 @@ class Joueur {
 		if (isset($reponse['status_code'])) {
             if ($reponse['status_code'] == 200) {
                 return true;
+            } else {
+                return false;
             }
         }
 		return false;
 	}
+
+    public static function ajouter_commentaire($id_joueur, $note, $commentaire) {
+        $donnees = [
+            'evaluation' => $note,
+            'commentaire' => $commentaire
+        ];
+        $reponse = appel_api('POST', urlApiGestionJoueur . "?id=" . $id_joueur, $donnees);
+        
+        if (isset($reponse['status_code'])) {
+            if ($reponse['status_code'] == 200 || $reponse['status_code'] == 201) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public static function compter_joueurs_actifs() {
+        $liste = self::recuperer_actifs();
+        return count($liste);
+    }
+
+    public static function calculer_age_moyen() {
+        $liste = self::recuperer_actifs();
+        if (empty($liste)) {
+            return 0;
+        }
+        $total_age = 0;
+        $maintenant = new DateTime();
+        foreach ($liste as $j) {
+            $date_n = new DateTime($j->get_date_naissance());
+            $total_age += $maintenant->diff($date_n)->y;
+        }
+        return round($total_age / count($liste), 1);
+    }
 }

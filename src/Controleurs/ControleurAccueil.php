@@ -7,13 +7,13 @@ if (!verifier_authentification()) {
     exit();
 }
 
-// require_once '../Modeles/DAO/MatchDAO.php';
-// require_once '../Modeles/DAO/JoueurDAO.php';
+require_once '../Modeles/Classes/Matchs.php';
+require_once '../Modeles/Classes/Joueur.php';
 
-// // Récupérer les données nécessaires
-// $prochain_match = MatchDAO::obtenir_prochain_match();
-// $dernier_resultat = MatchDAO::obtenir_dernier_resultat();
-// $nb_joueurs = JoueurDAO::compter_joueurs_actifs();
+// Récupérer les données nécessaires via les APIs
+$prochain_match = Matchs::obtenir_prochain_match();
+$dernier_resultat = Matchs::obtenir_dernier_resultat();
+$nb_joueurs = Joueur::compter_joueurs_actifs();
 
 // Afficher la vue
 require_once '../Vues/PageAccueil.php';

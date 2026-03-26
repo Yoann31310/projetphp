@@ -194,21 +194,11 @@ class ControleurMatch
 			exit();
 		}
 
-		// Vider l'ancienne feuille et enregistrer la nouvelle
-		if (Participation::vider_feuille($id_match)) {
-            $succes_global = true;
-            foreach ($liste_finale as $joueur) {
-                if (!Participation::ajouter_participant($id_match, $joueur['id_joueur'], $joueur['role'], $joueur['poste'])) {
-                    $succes_global = false;
-                }
-            }
-            if ($succes_global) {
-                $_SESSION['message'] = "La feuille de match a été mise à jour.";
-            } else {
-                $_SESSION['erreur'] = "La feuille de match a été vidée mais certains joueurs n'ont pas pu être ajoutés.";
-            }
+		// Enregistrer toute la feuille de match en une seule fois via l'API
+		if (Participation::enregistrer_feuille($id_match, $liste_finale)) {
+            $_SESSION['message'] = "La feuille de match a été mise à jour.";
         } else {
-            $_SESSION['erreur'] = "Impossible de vider l'ancienne feuille de match via l'API.";
+            $_SESSION['erreur'] = "Impossible d'enregistrer la feuille de match via l'API.";
         }
 
 		header("Location: ControleurMatch.php");
