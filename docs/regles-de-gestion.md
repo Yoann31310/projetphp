@@ -8,16 +8,6 @@ Le projet utilise une architecture MVC (Modèle-Vue-Contrôleur) avec de la prog
 
 ---
 
-## Accès à l'application
-
-**URL de l'application** : https://projetphp.alwaysdata.net/src/Controleurs/ControleurAccueil.php
-
-**Identifiants de connexion** :
-- **Identifiant** : `1573357`
-- **Mot de passe** : `azertyuiop`
-
----
-
 ## Structure du projet
 
 Le projet est organisé selon l'architecture MVC :
